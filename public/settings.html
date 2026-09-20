@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RePlate — Account Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/settings.css">
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-container">
+    <!-- Unified Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="/dashboard.html" class="brand-logo">
+                <div class="logo-icon"><i class="fa-solid fa-utensils"></i></div>
+                <span>RePlate</span>
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/donations.html"><i class="fa-solid fa-box-archive"></i> <span>Food Donations</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/activity.html"><i class="fa-solid fa-clock-rotate-left"></i> <span>Activity Log</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/settings.html"><i class="fa-solid fa-sliders"></i> <span>Settings</span></a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Sidebar User Profile Footer -->
+        <div class="user-profile">
+            <div class="user-avatar" id="userAvatar"><i class="fa-solid fa-circle-user"></i></div>
+            <div class="user-info">
+                <h4 id="userNameDisplay">Loading...</h4>
+                <p id="userRoleDisplay">—</p>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">Account Settings</h1>
+                <p class="page-subtitle">Manage your profile details, platform security, and free alert channels.</p>
+            </div>
+        </header>
+
+        <form id="settingsForm">
+            <div class="settings-grid">
+                <!-- Navigation Tabs -->
+                <nav class="settings-nav" id="settingsNav">
+                    <button type="button" class="settings-tab-btn active" data-tab="profile">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span>Profile Details</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-tab="security">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Password & Security</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-tab="notifications">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Free Alert Channels</span>
+                    </button>
+                </nav>
+
+                <!-- Dynamic Content Card -->
+                <div class="settings-card">
+                    <!-- Tab 1: Profile Information -->
+                    <div id="profile" class="tab-pane active">
+                        <div class="tab-header">
+                            <h3>Profile Information</h3>
+                            <p>Update your personal or organization details stored in your RePlate account.</p>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="full_name">Full Name / Organization Name</label>
+                                <input type="text" id="full_name" name="full_name" class="form-control" placeholder="e.g. Hope Children's Home">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="phone_number">Phone Number</label>
+                                <input type="text" id="phone_number" name="phone_number" class="form-control" placeholder="+254 700 000 000">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="email">Email Address</label>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="user@domain.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="address">Physical Pickup / Delivery Address</label>
+                                <input type="text" id="address" name="address" class="form-control" placeholder="Building, Street, Town">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Security -->
+                    <div id="security" class="tab-pane">
+                        <div class="tab-header">
+                            <h3>Password & Security</h3>
+                            <p>Ensure your account remains safe with a strong password.</p>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="current_password">Current Password</label>
+                                <input type="password" id="current_password" name="current_password" class="form-control" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="new_password">New Password</label>
+                                <input type="password" id="new_password" name="new_password" class="form-control" placeholder="••••••••">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Free Notifications -->
+                    <div id="notifications" class="tab-pane">
+                        <div class="tab-header">
+                            <h3>Alert Channels (100% Free)</h3>
+                            <p>Control how you receive real-time donation requests and updates.</p>
+                        </div>
+
+                        <div class="toggle-list">
+                            <div class="toggle-item">
+                                <div class="toggle-text">
+                                    <strong>In-App Activity Alerts</strong>
+                                    <p>Receive notifications inside your RePlate dashboard when status changes.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify_inapp" name="notify_inapp" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="toggle-item">
+                                <div class="toggle-text">
+                                    <strong>WhatsApp Quick Handoff</strong>
+                                    <p>Generates free direct WhatsApp chat links upon donation approval.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify_whatsapp" name="notify_whatsapp" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="toggle-item">
+                                <div class="toggle-text">
+                                    <strong>Free Email Confirmations</strong>
+                                    <p>Receive free dispatch notices sent directly to your registered email.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify_email" name="notify_email" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save Action Bar -->
+                    <div class="card-footer">
+                        <button type="submit" class="btn-save">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+
+<script src="/js/ui.js"></script>
+<script src="/js/settings.js"></script>
+</body>
+</html>

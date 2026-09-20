@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RePlate — Food Donations</title>
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/donations.css">
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="/dashboard" class="brand-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+                <img src="/images/logo.png" alt="RePlate Logo" style="height: 32px; width: auto; object-fit: contain;">
+                <span style="font-weight: 700; font-size: 1.2rem; color: #ffffff;">RePlate</span>
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/donations"><i class="fa-solid fa-box-archive"></i> <span>Food Donations</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/activity"><i class="fa-solid fa-clock-rotate-left"></i> <span>Activity Log</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/settings"><i class="fa-solid fa-sliders"></i> <span>Settings</span></a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-avatar" id="userAvatar"><i class="fa-solid fa-circle-user"></i></div>
+            <div class="user-info">
+                <h4 id="userNameDisplay">Loading...</h4>
+                <p id="userRoleDisplay">MEMBER</p>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <h1 class="page-title">Food Surplus Management</h1>
+            <p class="page-subtitle">List new surplus food or review items available across the platform.</p>
+        </header>
+
+        <!-- Post Surplus Section (Hidden dynamically for Recipients) -->
+        <section class="content-card section-mb" id="postSurplusSection">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-plus-circle"></i> Post Surplus Food</h3>
+            </div>
+            <form id="donationsPageForm" class="donations-form">
+                <div class="form-row">
+                    <div class="flex-2">
+                        <label for="page_food_name" class="form-label">Food Item Name</label>
+                        <input type="text" id="page_food_name" class="form-input" required placeholder="e.g. Fresh Produce Box, Bakery Surplus">
+                    </div>
+                    <div class="flex-1">
+                        <label for="page_category_id" class="form-label">Category</label>
+                        <select id="page_category_id" class="form-input" required>
+                            <option value="1">Prepared Meals</option>
+                            <option value="2">Produce & Fruits</option>
+                            <option value="3">Bakery & Grains</option>
+                            <option value="4">Dairy & Groceries</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="flex-1">
+                        <label for="page_quantity" class="form-label">Quantity</label>
+                        <input type="number" id="page_quantity" class="form-input" required placeholder="5">
+                    </div>
+                    <div class="flex-1">
+                        <label for="page_unit" class="form-label">Unit</label>
+                        <input type="text" id="page_unit" class="form-input" placeholder="kg, servings, boxes" required>
+                    </div>
+                    <div class="flex-1">
+                        <label for="page_expiry_date" class="form-label">Expiry Date</label>
+                        <input type="datetime-local" id="page_expiry_date" class="form-input" required>
+                    </div>
+                </div>
+
+                <div class="form-group-modal">
+                    <label for="page_pickup_location" class="form-label">Pickup Location</label>
+                    <input type="text" id="page_pickup_location" class="form-input" placeholder="e.g. Community Hub, Westlands" required>
+                </div>
+
+                <div class="form-actions-right">
+                    <button type="submit" class="btn-primary" id="donationsSubmitBtn">
+                        <i class="fa-solid fa-paper-plane"></i> Publish Donation
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="content-card">
+            <div class="card-header">
+                <h3 id="donationsListHeading">Food Surplus Listings</h3>
+            </div>
+            <div id="userDonationsContainer">
+                <div class="loading-state">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading surplus items...
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="/js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let user = null;
+    try {
+        user = JSON.parse(localStorage.getItem('replate_user') || localStorage.getItem('user'));
+        if (user) {
+            const role = (user.role || user.user_type || 'RECIPIENT').toLowerCase();
+            document.getElementById('userNameDisplay').textContent = user.full_name || user.username || user.name || 'User Profile';
+            document.getElementById('userRoleDisplay').textContent = role.toUpperCase();
+
+            const postSection = document.getElementById('postSurplusSection');
+            if (postSection && role === 'recipient') {
+                postSection.style.display = 'none';
+            }
+        }
+    } catch(e) {
+        console.error('Failed to parse user profile:', e);
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('replate_user');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        });
+    }
+});
+</script>
+<script src="/js/donations.js"></script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RePlate — Join the Movement</title>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/register.css">
+</head>
+<body>
+
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+
+<!-- Viewport Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="page-wrapper">
+    <!-- Left Hero Banner -->
+    <div class="hero-side">
+        <div class="slideshow-bg">
+            <div class="slide"></div>
+            <div class="slide"></div>
+            <div class="slide"></div>
+        </div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <a href="/" class="brand-logo">
+                <i class="fa-solid fa-utensils"></i>
+                <span>RePlate</span>
+            </a>
+            <h1 class="hero-title">Start Sharing or Receiving Food Today</h1>
+            <p class="hero-description">Create an account to connect directly with localized food networks, charities, and community partners.</p>
+
+            <ul class="feature-list">
+                <li class="feature-item">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Real-time listing alerts for fresh surplus food</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Direct request system for verified recipients</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Zero waste footprint tracking for donors</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="hero-footer">
+            © 2026 RePlate Initiative. All rights reserved.
+        </div>
+    </div>
+
+    <!-- Right Register Form -->
+    <div class="form-side">
+        <div class="form-header">
+            <h2>Create Account</h2>
+            <p>Select your account role and fill in your details.</p>
+        </div>
+
+        <!-- Dynamic Form Alert Banner -->
+        <div id="formAlert" class="form-alert" role="alert">
+            <i class="fa-solid fa-circle-exclamation" id="formAlertIcon"></i>
+            <span id="formAlertMsg"></span>
+        </div>
+
+        <!-- Role Selector Cards -->
+        <label class="form-label">I want to join as a:</label>
+        <div class="role-selector">
+            <div class="role-card active" id="roleRecipient" onclick="selectRole('recipient')">
+                <i class="fa-solid fa-hand-holding-heart"></i>
+                <h4>Recipient</h4>
+                <p>Claim available food</p>
+            </div>
+            <div class="role-card" id="roleDonor" onclick="selectRole('donor')">
+                <i class="fa-solid fa-store"></i>
+                <h4>Donor</h4>
+                <p>Post food donations</p>
+            </div>
+        </div>
+
+        <form id="registerForm" novalidate>
+            <input type="hidden" id="selectedRole" value="recipient">
+
+            <div class="form-group">
+                <label class="form-label" for="fullName">Full Name / Organization</label>
+                <div class="input-wrapper">
+                    <input type="text" id="fullName" class="form-input" placeholder="e.g. John Doe or Hope Shelter" required>
+                    <i class="fa-regular fa-user field-icon"></i>
+                </div>
+                <div class="field-error-msg" id="fullNameError">
+                    <i class="fa-solid fa-circle-xmark"></i> <span>Please enter your name or organization.</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <div class="input-wrapper">
+                    <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
+                    <i class="fa-regular fa-envelope field-icon"></i>
+                </div>
+                <div class="field-error-msg" id="emailError">
+                    <i class="fa-solid fa-circle-xmark"></i> <span>Please enter a valid email address.</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="label-row">
+                    <label class="form-label" for="password">Password</label>
+                    <button type="button" id="generatePasswordBtn" class="btn-gen-pass">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto Generate
+                    </button>
+                </div>
+                <div class="input-wrapper relative-wrapper">
+                    <input type="password" id="password" class="form-input padded-right" placeholder="Create strong password (min. 8 chars)" required>
+                    <i class="fa-solid fa-lock field-icon"></i>
+                    <i class="fa-regular fa-eye toggle-password-icon" id="togglePassword"></i>
+                </div>
+                <div class="strength-meter">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="field-error-msg" id="passwordError">
+                    <i class="fa-solid fa-circle-xmark"></i> <span>Password must be at least 8 characters long.</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">Confirm Password</label>
+                <div class="input-wrapper relative-wrapper">
+                    <input type="password" id="confirmPassword" class="form-input padded-right" placeholder="Re-enter password" required>
+                    <i class="fa-solid fa-shield-halved field-icon"></i>
+                    <i class="fa-regular fa-eye toggle-password-icon" id="toggleConfirmPassword"></i>
+                </div>
+                <div class="field-error-msg" id="confirmPasswordError">
+                    <i class="fa-solid fa-circle-xmark"></i> <span>Passwords do not match.</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span id="btnText">Complete Registration</span>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            Already have an account? <a href="/login">Log In</a>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts (ui.js MUST load before auth.js) -->
+<script src="/js/ui.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+    function selectRole(role) {
+        document.getElementById('selectedRole').value = role;
+        document.getElementById('roleRecipient').classList.toggle('active', role === 'recipient');
+        document.getElementById('roleDonor').classList.toggle('active', role === 'donor');
+    }
+
+    function setupPasswordToggle(inputId, toggleId) {
+        const input = document.getElementById(inputId);
+        const toggle = document.getElementById(toggleId);
+        if (!input || !toggle) return;
+
+        toggle.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            toggle.classList.toggle('fa-eye', !isPassword);
+            toggle.classList.toggle('fa-eye-slash', isPassword);
+        });
+    }
+
+    setupPasswordToggle('password', 'togglePassword');
+    setupPasswordToggle('confirmPassword', 'toggleConfirmPassword');
+
+    function updatePasswordStrength() {
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('strengthBar');
+        if (!passwordInput || !strengthBar) return;
+
+        const val = passwordInput.value;
+        let score = 0;
+        if (val.length >= 8) score += 33;
+        if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score += 33;
+        if (/[^A-Za-z0-9]/.test(val)) score += 34;
+
+        strengthBar.style.width = score + '%';
+        if (score <= 33) strengthBar.style.background = '#ef4444';
+        else if (score <= 66) strengthBar.style.background = '#f59e0b';
+        else strengthBar.style.background = '#10b981';
+    }
+
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', updatePasswordStrength);
+    }
+
+    const genBtn = document.getElementById('generatePasswordBtn');
+    if (genBtn) {
+        genBtn.addEventListener('click', () => {
+            setTimeout(updatePasswordStrength, 50);
+        });
+    }
+
+    document.querySelectorAll('.form-input').forEach(input => {
+        input.addEventListener('input', () => {
+            input.classList.remove('has-error');
+            const errElem = document.getElementById(`${input.id}Error`);
+            if (errElem) errElem.classList.remove('show');
+            
+            const formAlert = document.getElementById('formAlert');
+            if (formAlert) formAlert.classList.remove('show');
+        });
+    });
+
+    function showFormAlert(message, type = 'error') {
+        const formAlert = document.getElementById('formAlert');
+        const formAlertMsg = document.getElementById('formAlertMsg');
+        const formAlertIcon = document.getElementById('formAlertIcon');
+
+        formAlert.className = `form-alert show ${type}`;
+        formAlertMsg.textContent = message;
+        formAlertIcon.className = type === 'warning' ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-exclamation';
+    }
+
+    function setFieldError(fieldId, errorMsg) {
+        const input = document.getElementById(fieldId);
+        const errElem = document.getElementById(`${fieldId}Error`);
+        if (input) input.classList.add('has-error');
+        if (errElem) {
+            if (errorMsg) errElem.querySelector('span').textContent = errorMsg;
+            errElem.classList.add('show');
+        }
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        document.querySelectorAll('.form-input').forEach(i => i.classList.remove('has-error'));
+        document.querySelectorAll('.field-error-msg').forEach(e => e.classList.remove('show'));
+        document.getElementById('formAlert').classList.remove('show');
+
+        const role = document.getElementById('selectedRole').value;
+        const name = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        let hasError = false;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!name) {
+            setFieldError('fullName', 'Please enter your name or organization.');
+            hasError = true;
+        }
+
+        if (!email) {
+            setFieldError('email', 'Please enter your email address.');
+            hasError = true;
+        } else if (!emailRegex.test(email)) {
+            setFieldError('email', 'Please enter a valid email address.');
+            hasError = true;
+        }
+
+        if (!password) {
+            setFieldError('password', 'Password is required.');
+            hasError = true;
+        } else if (password.length < 8) {
+            setFieldError('password', 'Password must be at least 8 characters long.');
+            hasError = true;
+        }
+
+        if (!confirmPassword) {
+            setFieldError('confirmPassword', 'Please confirm your password.');
+            hasError = true;
+        } else if (password !== confirmPassword) {
+            setFieldError('confirmPassword', 'Passwords do not match.');
+            hasError = true;
+        }
+
+        if (hasError) {
+            showFormAlert('Please fix the highlighted errors before continuing.', 'error');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        
+        submitBtn.disabled = true;
+        btnText.textContent = 'Creating Account...';
+
+        try {
+            if (window.AuthEngine?.register) {
+                await AuthEngine.register({ name, email, password, role }, { suppressToast: true });
+            }
+            window.location.href = '/login';
+        } catch (err) {
+            submitBtn.disabled = false;
+            btnText.textContent = 'Complete Registration';
+            showFormAlert(err.message || 'Registration failed. Please try again.', 'error');
+        }
+    });
+</script>
+
+</body>
+</html>

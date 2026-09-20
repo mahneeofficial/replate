@@ -1,0 +1,185 @@
+/* ==========================================================================
+   RePlate — Modern Notifications Module Styles
+   File: public/css/notifications.css
+   ========================================================================== */
+
+.notifications-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.notifications-container::-webkit-scrollbar {
+    width: 6px;
+}
+.notifications-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.notifications-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+/* Individual Notification Card */
+.notification-card {
+    background: #131924;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.notification-card:hover {
+    background: #18202e;
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+}
+
+/* Unread Notification State */
+.notification-card.unread {
+    border-left: 4px solid #10b981;
+    background: rgba(16, 185, 129, 0.04);
+}
+
+.notification-main {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex: 1;
+}
+
+/* Base Notification Icon Container */
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+}
+
+/* Type Color Variations */
+.notification-icon.account, 
+.notification-icon.pickup, 
+.notification-icon.approved {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.notification-icon.donation, 
+.notification-icon.request {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+}
+
+.notification-icon.security, 
+.notification-icon.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.notification-icon.expired {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.notification-icon.nearby {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+}
+
+.notification-icon.milestone {
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+}
+
+.notification-icon.profile, 
+.notification-icon.info {
+    background: rgba(99, 102, 241, 0.15);
+    color: #6366f1;
+}
+
+/* Text Content */
+.notification-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.notification-content h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.notification-content p {
+    font-size: 0.83rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Metadata & Actions */
+.notification-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.btn-dismiss-notif {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.btn-dismiss-notif:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+}
+
+/* Empty State */
+.empty-notifications {
+    text-align: center;
+    padding: 36px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+}
+
+.empty-notifications i {
+    font-size: 2.2rem;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.empty-notifications p {
+    color: #94a3b8;
+    margin: 0;
+    font-size: 0.88rem;
+}

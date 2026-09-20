@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RePlate — Dashboard</title>
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/notifications.css">
+</head>
+<body>
+
+<!-- Toast Notifications Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="/dashboard" class="brand-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+                <img src="/images/logo.png" alt="RePlate Logo" style="height: 32px; width: auto; object-fit: contain;">
+                <span style="font-weight: 700; font-size: 1.2rem; color: #ffffff;">RePlate</span>
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/donations"><i class="fa-solid fa-box-archive"></i> <span>Food Donations</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/activity"><i class="fa-solid fa-clock-rotate-left"></i> <span>Activity Log</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/settings"><i class="fa-solid fa-sliders"></i> <span>Settings</span></a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- User Profile Card -->
+        <div class="user-profile">
+            <div class="user-avatar" id="userAvatar">
+                <i class="fa-solid fa-circle-user"></i>
+            </div>
+            <div class="user-info">
+                <h4 id="userNameDisplay">Loading...</h4>
+                <p id="userRoleDisplay">MEMBER</p>
+            </div>
+            <button class="btn-logout" id="logoutBtn" title="Logout">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+        <header class="page-header header-flex">
+            <div>
+                <h1 class="page-title" id="welcomeHeading">Welcome Back</h1>
+                <p class="page-subtitle">Here is a real-time overview of your impact and active food requests.</p>
+            </div>
+            <button id="addDonationBtn" class="btn-primary display-none header-btn">
+                <i class="fa-solid fa-plus"></i> Post Food Surplus
+            </button>
+        </header>
+
+        <!-- Metrics Grid -->
+        <section class="metrics-grid">
+            <div class="metric-card cyan">
+                <div class="metric-icon"><i class="fa-solid fa-bowl-food"></i></div>
+                <div class="metric-body">
+                    <span class="metric-title">Total Claims / Posts</span>
+                    <h2 id="metricTotal">0</h2>
+                </div>
+            </div>
+
+            <div class="metric-card emerald">
+                <div class="metric-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
+                <div class="metric-body">
+                    <span class="metric-title">Active Requests</span>
+                    <h2 id="metricActive">0</h2>
+                </div>
+            </div>
+
+            <div class="metric-card indigo">
+                <div class="metric-icon"><i class="fa-solid fa-leaf"></i></div>
+                <div class="metric-body">
+                    <span class="metric-title">CO₂ Saved (Kg)</span>
+                    <h2 id="metricCO2">0</h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notifications Section -->
+        <section class="content-card section-mb card-padded">
+            <div class="section-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 class="margin-0">Notifications</h3>
+                <div class="btn-group-notif">
+                    <button id="markAllReadBtn" class="btn-notif-action">
+                        <i class="fa-solid fa-check-double"></i> Mark all read
+                    </button>
+                    <button id="clearAllNotificationsBtn" class="btn-notif-action btn-danger-text">
+                        <i class="fa-solid fa-trash"></i> Clear all
+                    </button>
+                </div>
+            </div>
+            <div id="notificationsList" class="notifications-container">
+                <p class="text-muted">No new notifications.</p>
+            </div>
+        </section>
+
+        <!-- Dynamic Food Listings -->
+        <section class="content-card">
+            <div class="card-header">
+                <div>
+                    <h3>Available Food Nearby</h3>
+                    <p class="card-subtitle">Listings matching your location & preferences</p>
+                </div>
+            </div>
+            <div id="donationsListContainer">
+                <div class="loading-state">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Fetching available surplus food...
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Modal for Creating Donations -->
+<div id="donationModal" class="modal-backdrop display-none">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="margin-0">Post Surplus Food</h3>
+            <button id="closeModalBtn" class="btn-close">&times;</button>
+        </div>
+        <form id="createDonationForm">
+            <div class="form-group-modal">
+                <label for="food_name" class="modal-label">Food Item Name</label>
+                <input type="text" id="food_name" class="modal-input" required placeholder="e.g. Fresh Apples, Baked Bread">
+            </div>
+            <div class="form-group-modal">
+                <label for="category_id" class="modal-label">Category</label>
+                <select id="category_id" class="modal-input" required>
+                    <option value="">Select Category...</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="flex-2">
+                    <label for="quantity" class="modal-label">Quantity</label>
+                    <input type="number" id="quantity" class="modal-input" required placeholder="10">
+                </div>
+                <div class="flex-1">
+                    <label for="unit" class="modal-label">Unit</label>
+                    <input type="text" id="unit" class="modal-input" placeholder="kg, boxes" required>
+                </div>
+            </div>
+            <div class="form-group-modal">
+                <label for="expiry_date" class="modal-label">Expiry Date</label>
+                <input type="datetime-local" id="expiry_date" class="modal-input" required>
+            </div>
+            <div class="form-group-modal mb-16">
+                <label for="pickup_location" class="modal-label">Pickup Location</label>
+                <input type="text" id="pickup_location" class="modal-input" placeholder="e.g. 123 Community St." required>
+            </div>
+            <button type="submit" class="btn-primary btn-full">Submit Donation</button>
+        </form>
+    </div>
+</div>
+
+<script src="/js/ui.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

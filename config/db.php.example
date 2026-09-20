@@ -1,0 +1,9 @@
+<?php
+declare(strict_types=1);
+
+$host = 'localhost';
+$db   = 'replate';
+$user = 'root';
+$pass = 'your_password';
+
+// PDO setup logic here...

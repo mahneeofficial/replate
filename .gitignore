@@ -1,0 +1,17 @@
+# Security & Credentials
+config/db.php
+config/mail.php
+.env
+
+# System / Uploads / Logs
+uploads/
+logs/*.log
+
+# Operating System & IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies (if you use Composer later)
+vendor/

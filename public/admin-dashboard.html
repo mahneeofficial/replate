@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RePlate — Admin Control Center</title>
+
+    <script>
+        (function() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (!user || user.role !== 'admin') {
+                    window.location.replace('/login');
+                }
+            } catch (e) {
+                window.location.replace('/login');
+            }
+        })();
+    </script>
+
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+</head>
+<body class="admin-body">
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <aside class="sidebar">
+        <div class="sidebar-wrapper">
+            <div class="brand"><i class="fa-solid fa-shield-halved"></i> RePlate Admin</div>
+            <ul class="nav-list">
+                <li class="nav-item"><button class="active" onclick="switchTab('analytics', this)"><i class="fa-solid fa-chart-pie"></i> Impact Analytics</button></li>
+                <li class="nav-item"><button onclick="switchTab('users', this)"><i class="fa-solid fa-users-gear"></i> User Moderation</button></li>
+                <li class="nav-item"><button onclick="switchTab('categories', this)"><i class="fa-solid fa-layer-group"></i> Food Categories</button></li>
+                <li class="nav-item"><button onclick="switchTab('listings', this)"><i class="fa-solid fa-box-archive"></i> Food Donations</button></li>
+                <li class="nav-item"><button onclick="switchTab('requests', this)"><i class="fa-solid fa-hand-holding-heart"></i> Donation Requests</button></li>
+                <li class="nav-item"><button onclick="switchTab('reports', this)"><i class="fa-solid fa-file-invoice"></i> System Reports</button></li>
+                <li class="nav-item"><button onclick="switchTab('notifications', this)"><i class="fa-solid fa-bell"></i> Notifications</button></li>
+                <li class="nav-item"><button onclick="switchTab('audit', this)"><i class="fa-solid fa-list-check"></i> Audit Logs</button></li>
+            </ul>
+        </div>
+        <div class="admin-user-footer">
+            <span id="adminNameDisplay">Admin Session</span>
+            <button id="adminLogoutBtn" class="btn-logout-small" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- 1. Global Impact Analytics Panel -->
+        <section id="analytics" class="tab-panel active">
+            <h2>Global Impact Analytics</h2>
+            <p class="section-desc">Platform-wide statistics and environmental tracking.</p>
+
+            <div class="metrics-grid">
+                <div class="metric-card"><h4>Total Food Rescued</h4><p id="metricRescued">0 kg</p></div>
+                <div class="metric-card"><h4>Active Listings</h4><p id="metricListings">0</p></div>
+                <div class="metric-card"><h4>Completed Claims</h4><p id="metricClaims">0</p></div>
+                <div class="metric-card"><h4>CO₂ Emissions Avoided</h4><p id="metricCO2">0 kg</p></div>
+            </div>
+        </section>
+
+        <!-- 2. User Moderation Panel -->
+        <section id="users" class="tab-panel">
+            <h2>User Moderation & Account Approvals</h2>
+            <p class="section-desc">Verify Donors and Recipients, manage roles, and suspend/approve accounts.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr><th>User / Business</th><th>Role</th><th>Status</th><th>Verification</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 3. Food Categories Management Panel -->
+        <section id="categories" class="tab-panel">
+            <h2>Manage Food Categories</h2>
+            <p class="section-desc">Create, update, and remove food classification categories.</p>
+
+            <div class="panel-actions">
+                <button class="btn-primary" id="addCategoryBtn"><i class="fa-solid fa-plus"></i> Add Category</button>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr><th>Category ID</th><th>Category Name</th><th>Description</th><th>Listings Count</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="categoriesTableBody">
+                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading categories...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 4. Listing Moderation Panel -->
+        <section id="listings" class="tab-panel">
+            <h2>Monitor Food Donations</h2>
+            <p class="section-desc">Monitor posted food listings, remove expired or non-compliant donations.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr><th>Food Title</th><th>Donor</th><th>Category</th><th>Expiry</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="listingsTableBody">
+                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading listings...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 5. Monitor Donation Requests Panel -->
+        <section id="requests" class="tab-panel">
+            <h2>Monitor Donation Requests</h2>
+            <p class="section-desc">Track active claims and requests submitted by recipient organizations.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr><th>Request ID</th><th>Listing</th><th>Recipient Organization</th><th>Status</th><th>Date</th></tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading requests...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 6. Generate Reports Panel -->
+        <section id="reports" class="tab-panel">
+            <h2>Generate Platform Reports</h2>
+            <p class="section-desc">Export analytical data for impact assessments and operational audits.</p>
+
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h3>Donation Impact Summary</h3>
+                    <p>Detailed breakdown of rescued food weight and environmental metrics.</p>
+                    <button class="btn-secondary" onclick="generateReport('impact')"><i class="fa-solid fa-download"></i> Export CSV</button>
+                </div>
+                <div class="report-card">
+                    <h3>User Audit & Activity Report</h3>
+                    <p>Registration logs, verification statuses, and account activities.</p>
+                    <button class="btn-secondary" onclick="generateReport('users')"><i class="fa-solid fa-download"></i> Export CSV</button>
+                </div>
+                <div class="report-card">
+                    <h3>Fulfillment & Claims Report</h3>
+                    <p>Log of all requested vs. completed food claims and delivery statuses.</p>
+                    <button class="btn-secondary" onclick="generateReport('claims')"><i class="fa-solid fa-download"></i> Export CSV</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Manage Notifications Panel -->
+        <section id="notifications" class="tab-panel">
+            <h2>Manage System Notifications</h2>
+            <p class="section-desc">Broadcast platform announcements to donors and recipients.</p>
+
+            <form id="notificationForm" class="admin-form">
+                <div class="form-group">
+                    <label for="notifTarget">Target Audience</label>
+                    <select id="notifTarget" required>
+                        <option value="all">All Users</option>
+                        <option value="donors">Food Donors Only</option>
+                        <option value="recipients">Recipient Organizations Only</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="notifTitle">Notification Title</label>
+                    <input type="text" id="notifTitle" placeholder="e.g. Scheduled System Maintenance" required />
+                </div>
+                <div class="form-group">
+                    <label for="notifMessage">Notification Message</label>
+                    <textarea id="notifMessage" rows="4" placeholder="Enter broadcast announcement..." required></textarea>
+                </div>
+                <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Send Notification</button>
+            </form>
+        </section>
+
+        <!-- 8. Audit & Activity Logs Panel -->
+        <section id="audit" class="tab-panel">
+            <h2>System Audit Logs</h2>
+            <p class="section-desc">Track login attempts, claims, and administrative actions.</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr><th>Timestamp</th><th>Event / Action</th><th>User</th><th>Log Type</th></tr>
+                </thead>
+                <tbody id="auditTableBody">
+                    <tr><td colspan="4" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading system logs...</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Admin Moderation Modal -->
+    <div id="adminActionModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalDescription">Are you sure you want to perform this administrative action?</p>
+            <div class="modal-actions">
+                <button id="modalCancelBtn" class="btn-secondary">Cancel</button>
+                <button id="modalConfirmBtn" class="btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Add New Food Category</h3>
+            <form id="addCategoryForm" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label for="catName">Category Name</label>
+                    <input type="text" id="catName" required style="width: 100%; padding: 8px; margin-top: 4px;" />
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label for="catDesc">Description</label>
+                    <textarea id="catDesc" rows="3" style="width: 100%; padding: 8px; margin-top: 4px;"></textarea>
+                </div>
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" id="cancelCatBtn" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Global UI, Auth, and Admin Scripts -->
+    <script src="/js/ui.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin.js"></script>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item button').forEach(b => b.classList.remove('active'));
+
+            const targetPanel = document.getElementById(tabId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+            if (btn) {
+                btn.classList.add('active');
+            }
+
+            if (typeof window.onAdminTabSwitch === 'function') {
+                window.onAdminTabSwitch(tabId);
+            }
+        }
+
+        document.getElementById('adminLogoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        });
+
+        function generateReport(type) {
+            if (typeof window.exportReport === 'function') {
+                window.exportReport(type);
+            } else {
+                console.log(`Generating report for: ${type}`);
+            }
+        }
+    </script>
+</body>
+</html>

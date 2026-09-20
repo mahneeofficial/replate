@@ -1,0 +1,9 @@
+<?php
+declare(strict_types=1);
+
+define('MAIL_HOST', 'smtp.gmail.com');
+define('MAIL_PORT', 587);
+define('MAIL_USER', 'your-email@gmail.com');
+define('MAIL_PASS', 'your-app-password');
+define('MAIL_FROM', 'your-email@gmail.com');
+define('MAIL_FROM_NAME', 'RePlate Team');

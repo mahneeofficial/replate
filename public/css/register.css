@@ -1,0 +1,488 @@
+/* ==========================================================================
+   RePlate - Registration Page Layout & Interactive Components
+   Location: public/css/register.css
+   ========================================================================== */
+
+:root {
+    --primary: #10b981;
+    --primary-hover: #059669;
+    --primary-light: rgba(16, 185, 129, 0.12);
+    --radius-lg: 16px;
+    --radius-md: 10px;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 30px 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Background Animated Blur Orbs */
+.bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: 0;
+    animation: float 10s infinite alternate ease-in-out;
+}
+
+.orb-1 {
+    width: 420px;
+    height: 420px;
+    background: rgba(16, 185, 129, 0.22);
+    top: -60px;
+    left: -60px;
+}
+
+.orb-2 {
+    width: 480px;
+    height: 480px;
+    background: rgba(59, 130, 246, 0.18);
+    bottom: -100px;
+    right: -60px;
+    animation-delay: -5s;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px) scale(1); }
+    100% { transform: translateY(30px) scale(1.08); }
+}
+
+/* Fixed Viewport Toast Notifications */
+.toast-container {
+    position: fixed !important;
+    top: 24px !important;
+    right: 24px !important;
+    z-index: 99999 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 380px;
+    width: calc(100% - 48px);
+    pointer-events: none;
+}
+
+.toast-container > * {
+    pointer-events: auto;
+}
+
+/* Toast Card Base */
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid var(--primary);
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+}
+
+.toast.error i {
+    color: #ef4444;
+}
+
+.toast.success i {
+    color: var(--primary);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Main Container Structure */
+.page-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1080px;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Left Hero Section */
+.hero-side {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.92), rgba(15, 23, 42, 0.95)),
+                url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1000&q=80') center/cover;
+    padding: 50px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #ffffff;
+    position: relative;
+}
+
+.hero-side::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-decoration: none;
+    margin-bottom: 35px;
+}
+
+.brand-logo i {
+    width: 45px;
+    height: 45px;
+    background: var(--primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #ffffff;
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+.hero-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 15px;
+}
+
+.feature-list {
+    list-style: none;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.feature-item i {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.3);
+    border: 1px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+/* Right Form Section */
+.form-side {
+    background: #ffffff;
+    padding: 45px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-header {
+    margin-bottom: 24px;
+}
+
+.form-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.form-header p {
+    color: #64748b;
+    font-size: 0.92rem;
+}
+
+/* Top Alert Banner */
+.form-alert {
+    display: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.4;
+}
+
+.form-alert.show {
+    display: flex;
+}
+
+.form-alert.error {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.form-alert.warning {
+    background-color: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fef3c7;
+}
+
+/* Interactive Role Selection Cards */
+.role-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 8px;
+    margin-bottom: 24px;
+}
+
+.role-card {
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: #f8fafc;
+}
+
+.role-card i {
+    font-size: 1.5rem;
+    color: #64748b;
+    margin-bottom: 8px;
+    transition: color 0.25s ease;
+}
+
+.role-card h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+}
+
+.role-card p {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.role-card:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+}
+
+.role-card.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.role-card.active i,
+.role-card.active h4 {
+    color: var(--primary);
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 18px;
+    position: relative;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.label-row .form-label {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+/* Auto Generate Password Pill Button */
+.btn-gen-pass {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-gen-pass:hover {
+    background: var(--primary-light);
+    color: var(--primary-hover);
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i.field-icon {
+    position: absolute;
+    left: 16px;
+    color: #64748b;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px 12px 46px;
+    font-size: 0.92rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.form-input:focus {
+    border-color: var(--primary);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+.form-input:focus + i.field-icon {
+    color: var(--primary);
+}
+
+.form-input.has-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Inline Field Error Messages */
+.field-error-msg {
+    display: none;
+    color: #ef4444;
+    font-size: 0.78rem;
+    font-weight: 500;
+    margin-top: 6px;
+    align-items: center;
+    gap: 5px;
+}
+
+.field-error-msg.show {
+    display: flex;
+}
+
+/* Password Strength Meter */
+.strength-meter {
+    height: 4px;
+    width: 100%;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Submit Button */
+.btn-submit {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.98rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.25);
+}
+
+.btn-submit:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 25px rgba(16, 185, 129, 0.35);
+}
+
+.login-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.login-footer a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+    margin-left: 4px;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 850px) {
+    .page-wrapper {
+        grid-template-columns: 1fr;
+    }
+    .hero-side {
+        display: none;
+    }
+    .form-side {
+        padding: 35px 25px;
+    }
+}
