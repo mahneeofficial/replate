@@ -10,52 +10,52 @@ RePlate is structured around a decoupled, modular RESTful API architecture runni
 
 ---
 
-## System Architectural Overview
+### System Architectural Overview
 
 RePlate is structured around a decoupled, modular RESTful API architecture running on PHP 8.2+ and MySQL/MariaDB 10.4+. The system isolates public entry points, enforcement wrappers, and configuration files to enforce the principle of least privilege.
 
+```text
 replate/
 ├── config/
-│   ├── db.php                     # Database connection wrapper (PDO, ignored by Git)
-│   ├── db.php.example             # Database configuration template for deployment
-│   ├── init.php                   # Session & global initialization bootstrapping
-│   ├── mail.php                   # Socket-based SMTP mail driver (ignored by Git)
-│   ├── mail.php.example           # SMTP mail configuration template
-│   └── Security.php               # Security header applier & rate-limiting engine
+│   ├── db.php # Database connection wrapper (PDO, ignored by Git)
+│   ├── db.php.example # Database configuration template for deployment
+│   ├── init.php # Session & global initialization bootstrapping
+│   ├── mail.php # Socket-based SMTP mail driver (ignored by Git)
+│   └── mail.php.example # SMTP mail configuration template
+├── Security.php # Security header applier & rate-limiting engine
 ├── public/
-│   ├── index.php                  # Primary API gateway and routing handler
-│   ├── .htaccess                  # Apache rewrite rules for clean URL routing
-│   ├── favicon.ico                # Site icon resource
+│   ├── index.php # Primary API gateway and routing handler
+│   ├── .htaccess # Apache rewrite rules for clean URL routing
+│   ├── favicon.ico # Site icon resource
 │   ├── api/
-│   │   ├── activity.php           # User activity metrics & log retrieval
-│   │   ├── admin.php              # System administration & user/donation management
-│   │   ├── categories.php         # Food category taxonomy handler
-│   │   ├── donations.php          # CRUD operations for food donation items
-│   │   ├── forgot_password.php    # Self-service OTP password recovery workflow
-│   │   ├── notifications.php      # User notification dispatch & management
-│   │   ├── reports.php            # Analytics, impact metrics, and reporting API
-│   │   ├── requests.php           # Claim request workflow & approval engine
-│   │   ├── settings.php           # User profile and discretion settings API
-│   │   └── users.php              # User authentication, registration, session management
-│   ├── css/                       # Modular UI stylesheets
-│   ├── js/                        # Frontend controllers & AJAX handlers
-│   │   └── ui.js                  # Shared UI components & dynamic rendering
-│   ├── activity.html              # User activity log dashboard
-│   ├── admin-dashboard.html       # Administrative control center
-│   ├── dashboard.html             # User portal dashboard
-│   ├── donations.html             # Donation discovery & management page
-│   ├── index.html                 # Platform landing page
-│   ├── login.html                 # Authentication interface
-│   ├── register.html              # Registration page
-│   ├── requests.html              # Request management interface
-│   └── settings.html              # User preferences & profile settings
+│   │   ├── activity.php # User activity metrics & log retrieval
+│   │   ├── admin.php # System administration & user/donation management
+│   │   ├── categories.php # Food category taxonomy handler
+│   │   ├── donations.php # CRUD operations for food donation items
+│   │   ├── forgot_password.php # Self-service OTP password recovery workflow
+│   │   ├── notifications.php # User notification dispatch & management
+│   │   ├── reports.php # Analytics, impact metrics, and reporting API
+│   │   ├── requests.php # Claim request workflow & approval engine
+│   │   ├── settings.php # User profile and discretion settings API
+│   │   └── users.php # User authentication, registration, session management
+│   ├── css/ # Modular UI stylesheets
+│   ├── js/ # Frontend controllers & AJAX handlers
+│   ├── activity.html # User activity log dashboard
+│   ├── admin-dashboard.html # Administrative control center
+│   ├── dashboard.html # User portal dashboard
+│   ├── donations.html # Donation discovery & management page
+│   ├── index.html # Platform landing page
+│   ├── login.html # Authentication interface
+│   ├── register.html # Registration page
+│   ├── requests.html # Request management interface
+│   └── settings.html # User preferences & profile settings
 ├── sql/
-│   └── schema.sql                 # Primary DDL database creation script
-├── .gitignore                     # Git exclusion specifications
-├── Dockerfile                     # Apache/PHP container definition
-├── README.md                      # Project documentation
-├── replate_dump.sql               # Production database seed data dump
-└── router.php                     # Local development PHP built-in server router
+│   └── schema.sql # Primary DDL database creation script
+├── .gitignore # Git exclusion specifications
+├── Dockerfile # Apache/PHP container definition
+├── README.md # Project documentation
+├── replate_dump.sql # Production database seed data dump
+└── router.php # Local development PHP built-in server router
 
 
 ---
