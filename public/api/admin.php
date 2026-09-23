@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -53,13 +53,28 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
     exit;
 }
 
+// Verify Admin Role
 $userRole = $_SESSION['role'] ?? $_SESSION['user']['role'] ?? '';
+$currentUserId = $_SESSION['user_id'] ?? $_SESSION['user']['id'] ?? $_SESSION['user']['user_id'] ?? null;
+
+if (empty($userRole) && $currentUserId) {
+    $roleStmt = $pdo->prepare("SELECT role FROM users WHERE user_id = ?");
+    $roleStmt->execute([$currentUserId]);
+    $userRole = (string)$roleStmt->fetchColumn();
+}
+
 if (strtolower((string)$userRole) !== 'admin') {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'ERR_AUTH_03: Unauthorized admin access required.']);
+    echo json_encode(['success' => false, 'error' => 'ERR_AUTH_03: Unauthorized. Admin privileges required.']);
     exit;
 }
 
+// Rate Limiting for Admin Mutations
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && class_exists('Security') && method_exists('Security', 'enforceRateLimit')) {
+    Security::enforceRateLimit('admin_action', 30, 300);
+}
+
+// Parse Input
 $rawInput = file_get_contents('php://input');
 $inputData = !empty($rawInput) ? json_decode($rawInput, true) : null;
 if (!is_array($inputData)) {
@@ -68,20 +83,30 @@ if (!is_array($inputData)) {
 
 $action = $_GET['action'] ?? $inputData['action'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && class_exists('Security') && method_exists('Security', 'enforceRateLimit')) {
-    Security::enforceRateLimit('admin_action', 30, 300);
-}
+// Helper function for sanitization compatibility
+$cleanString = function (string $val): string {
+    $val = trim($val);
+    if (class_exists('Security')) {
+        if (method_exists('Security', 'cleanInput')) {
+            return Security::cleanInput($val);
+        }
+        if (method_exists('Security', 'sanitize')) {
+            return Security::sanitize($val);
+        }
+    }
+    return htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
+};
 
 try {
     switch ($action) {
         case 'analytics':
-            $stmt1 = $pdo->query("SELECT COALESCE(SUM(CAST(quantity AS DECIMAL(10,2))), 0) AS total_rescued FROM food_donations WHERE status = 'Collected'");
+            $stmt1 = $pdo->query("SELECT COALESCE(SUM(CAST(quantity AS DECIMAL(10,2))), 0) AS total_rescued FROM food_donations WHERE status IN ('Collected', 'Completed')");
             $rescued = (float)($stmt1->fetch(PDO::FETCH_ASSOC)['total_rescued'] ?? 0);
 
             $stmt2 = $pdo->query("SELECT COUNT(*) AS active_count FROM food_donations WHERE status = 'Available'");
             $active = (int)($stmt2->fetch(PDO::FETCH_ASSOC)['active_count'] ?? 0);
 
-            $stmt3 = $pdo->query("SELECT COUNT(*) AS completed_claims FROM donation_requests WHERE status = 'Approved'");
+            $stmt3 = $pdo->query("SELECT COUNT(*) AS completed_claims FROM donation_requests WHERE status IN ('Approved', 'Completed')");
             $completed = (int)($stmt3->fetch(PDO::FETCH_ASSOC)['completed_claims'] ?? 0);
 
             $co2_avoided = round($rescued * 2.5, 1);
@@ -122,8 +147,7 @@ try {
 
         case 'update_user_status':
             $targetUserId = (int)($inputData['user_id'] ?? 0);
-            $rawStatus = trim((string)($inputData['status'] ?? ''));
-            $status = (class_exists('Security') && method_exists('Security', 'sanitize')) ? Security::sanitize($rawStatus) : $rawStatus;
+            $status = $cleanString((string)($inputData['status'] ?? ''));
 
             if (!$targetUserId || empty($status)) {
                 http_response_code(400);
@@ -192,10 +216,8 @@ try {
             break;
 
         case 'add_category':
-            $rawCatName = trim((string)($inputData['name'] ?? ''));
-            $rawCatDesc = trim((string)($inputData['description'] ?? ''));
-            $name = (class_exists('Security') && method_exists('Security', 'sanitize')) ? Security::sanitize($rawCatName) : $rawCatName;
-            $description = (class_exists('Security') && method_exists('Security', 'sanitize')) ? Security::sanitize($rawCatDesc) : $rawCatDesc;
+            $name = $cleanString((string)($inputData['name'] ?? ''));
+            $description = $cleanString((string)($inputData['description'] ?? ''));
 
             if (empty($name)) {
                 http_response_code(400);
@@ -246,15 +268,10 @@ try {
 
         case 'send_notification':
             $userId = (int)($inputData['user_id'] ?? 0);
-            $rawTarget = trim((string)($inputData['target'] ?? 'all'));
-            $rawTitle = trim((string)($inputData['title'] ?? ''));
-            $rawMessage = trim((string)($inputData['message'] ?? ''));
-            $rawType = trim((string)($inputData['type'] ?? 'info'));
-
-            $target = (class_exists('Security') && method_exists('Security', 'sanitize')) ? Security::sanitize($rawTarget) : $rawTarget;
-            $title = (class_exists('Security') && method_exists('Security', 'sanitize')) ? Security::sanitize($rawTitle) : $rawTitle;
-            $message = (class_exists('Security') && method_exists('Security', 'sanitize')) ? Security::sanitize($rawMessage) : $rawMessage;
-            $type = (class_exists('Security') && method_exists('Security', 'sanitize')) ? Security::sanitize($rawType) : $rawType;
+            $target = $cleanString((string)($inputData['target'] ?? 'all'));
+            $title = $cleanString((string)($inputData['title'] ?? ''));
+            $message = $cleanString((string)($inputData['message'] ?? ''));
+            $type = $cleanString((string)($inputData['type'] ?? 'info'));
 
             if (empty($title) || empty($message)) {
                 http_response_code(400);

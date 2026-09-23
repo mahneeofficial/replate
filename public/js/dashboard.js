@@ -40,7 +40,7 @@ const DashboardUtils = {
         }
     },
 
-    addNotification(title, message, type) {
+    addNotification(title, message, type = 'info') {
         if (window.UIEngine && typeof window.UIEngine.addNotification === 'function') {
             window.UIEngine.addNotification(title, message, type);
         } else {
@@ -107,6 +107,7 @@ const DashboardUtils = {
 
 document.addEventListener('DOMContentLoaded', () => {
     initUserProfile();
+    loadCategories();
     loadDashboardMetrics();
     loadDonationListings();
     loadUserNotifications();
@@ -117,16 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// 1. Session & User Profile Loader (Always syncs with backend database updates)
+// 1. Session & User Profile Loader
 async function initUserProfile() {
     const cachedUser = DashboardUtils.getUser();
 
-    // Fast-render using existing local cache first
     if (cachedUser && (cachedUser.name || cachedUser.full_name || cachedUser.organization_name || cachedUser.email)) {
         renderUser(cachedUser);
     }
 
-    // Always background-sync with backend to capture direct MySQL database updates (e.g. role changes)
     try {
         const res = await fetch('/api/users?action=me');
         if (res.ok) {
@@ -139,7 +138,6 @@ async function initUserProfile() {
                 localStorage.setItem('replate_user', JSON.stringify(updatedUser));
                 renderUser(updatedUser);
 
-                // If user role changed in database, refresh listings to match new permissions
                 if (currentRole && currentRole.toLowerCase() !== String(newRole).toLowerCase()) {
                     loadDonationListings();
                 }
@@ -180,7 +178,31 @@ function renderFallbackUser() {
     if (roleEl) roleEl.textContent = 'RECIPIENT';
 }
 
-// 2. Metrics Fetching
+// 2. Fetch and Populate Food Categories
+async function loadCategories() {
+    const categorySelect = document.getElementById('category_id');
+    if (!categorySelect) return;
+
+    try {
+        let res = await fetch('/api/categories.php');
+        if (!res.ok) {
+            res = await fetch('/api/categories');
+        }
+        if (res.ok) {
+            const data = await res.json();
+            const categories = data.categories || (Array.isArray(data) ? data : []);
+            
+            if (categories.length > 0) {
+                categorySelect.innerHTML = '<option value="">Select Category</option>' + 
+                    categories.map(c => `<option value="${c.category_id || c.id}">${DashboardUtils.escape(c.name)}</option>`).join('');
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load food categories:', err);
+    }
+}
+
+// 3. Metrics Fetching
 async function loadDashboardMetrics() {
     try {
         const res = await fetch('/api/donations?action=metrics');
@@ -188,16 +210,16 @@ async function loadDashboardMetrics() {
         const data = await res.json();
         
         if (data && data.success && data.metrics) {
-            if (document.getElementById('metricTotal')) document.getElementById('metricTotal').textContent = data.metrics.total_claims ?? 0;
-            if (document.getElementById('metricActive')) document.getElementById('metricActive').textContent = data.metrics.active_requests ?? 0;
-            if (document.getElementById('metricCO2')) document.getElementById('metricCO2').textContent = data.metrics.co2_saved ?? 0;
+            if (document.getElementById('metricTotal')) document.getElementById('metricTotal').textContent = data.metrics.total_claims ?? data.metrics.total_donations ?? 0;
+            if (document.getElementById('metricActive')) document.getElementById('metricActive').textContent = data.metrics.active_requests ?? data.metrics.active_listings ?? 0;
+            if (document.getElementById('metricCO2')) document.getElementById('metricCO2').textContent = data.metrics.co2_saved ?? data.metrics.co2_avoided ?? '0 kg';
         }
     } catch (err) {
         console.error('Failed to load dashboard metrics:', err);
     }
 }
 
-// 3. Donation Listings
+// 4. Donation Listings
 async function loadDonationListings() {
     const container = document.getElementById('donationsListContainer');
     if (!container) return;
@@ -208,7 +230,7 @@ async function loadDonationListings() {
     try {
         const res = await fetch(endpoint);
         const data = await res.json();
-        const items = data.donations || (Array.isArray(data) ? data : []);
+        const items = data.donations || data.listings || (Array.isArray(data) ? data : []);
 
         if (items.length > 0) {
             let html = `
@@ -231,13 +253,13 @@ async function loadDonationListings() {
                 const foodName = DashboardUtils.escape(rawFoodName);
                 const safeAttrFoodName = DashboardUtils.escapeAttr(rawFoodName);
                 const quantity = DashboardUtils.escape(`${item.quantity} ${item.unit || ''}`);
-                const category = DashboardUtils.escape(item.category_name || 'General');
+                const category = DashboardUtils.escape(item.category_name || item.category || 'General');
                 const expiry = item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : 'N/A';
                 const status = item.status || 'Available';
 
                 let actionCell = `<span class="status-badge ${status.toLowerCase()}">${status}</span>`;
 
-                if ((role === 'recipient' || role === 'admin') && status === 'Available') {
+                if ((role === 'recipient' || role === 'admin') && status.toLowerCase() === 'available') {
                     actionCell = `<button class="btn-primary claim-donation-btn" style="padding: 6px 12px; font-size: 0.8rem;" data-id="${itemId}" data-name="${safeAttrFoodName}">Claim</button>`;
                 }
 
@@ -253,13 +275,15 @@ async function loadDonationListings() {
             html += `</tbody></table></div>`;
             container.innerHTML = html;
 
-            container.querySelectorAll('.claim-donation-btn').forEach(btn => {
-                btn.onclick = (e) => {
-                    const id = e.currentTarget.getAttribute('data-id');
-                    const name = e.currentTarget.getAttribute('data-name');
+            // Event Delegation for Claim Buttons
+            container.onclick = (e) => {
+                const claimBtn = e.target.closest('.claim-donation-btn');
+                if (claimBtn) {
+                    const id = claimBtn.getAttribute('data-id');
+                    const name = claimBtn.getAttribute('data-name');
                     claimDonation(id, name);
-                };
-            });
+                }
+            };
         } else {
             renderEmptyDonationsState(container);
         }
@@ -276,7 +300,7 @@ function renderEmptyDonationsState(container) {
         </div>`;
 }
 
-// 4. Claim Donation Handler
+// 5. Claim Donation Handler
 async function claimDonation(donationId, foodName = 'Food Surplus') {
     if (!confirm(`Are you sure you want to claim "${foodName}"?`)) return;
 
@@ -301,7 +325,7 @@ async function claimDonation(donationId, foodName = 'Food Surplus') {
     }
 }
 
-// 5. Notifications Engine
+// 6. Notifications Engine
 async function loadUserNotifications() {
     const notifContainer = document.getElementById('notificationsList');
     if (!notifContainer) return;
@@ -378,21 +402,23 @@ async function loadUserNotifications() {
         `;
     }).join('');
 
-    notifContainer.querySelectorAll('.btn-mark-read').forEach(el => {
-        el.addEventListener('click', () => {
-            const id = el.getAttribute('data-id');
-            const isRead = el.getAttribute('data-read') === 'true';
-            markNotificationRead(id, isRead);
-        });
-    });
-
-    notifContainer.querySelectorAll('.btn-dismiss-notif').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    // Centralized Event Delegation for Notifications List
+    notifContainer.onclick = (e) => {
+        const dismissBtn = e.target.closest('.btn-dismiss-notif');
+        if (dismissBtn) {
             e.stopPropagation();
-            const id = btn.getAttribute('data-id');
+            const id = dismissBtn.getAttribute('data-id');
             dismissNotification(id);
-        });
-    });
+            return;
+        }
+
+        const markReadEl = e.target.closest('.btn-mark-read');
+        if (markReadEl) {
+            const id = markReadEl.getAttribute('data-id');
+            const isRead = markReadEl.getAttribute('data-read') === 'true';
+            markNotificationRead(id, isRead);
+        }
+    };
 }
 
 async function markNotificationRead(id, isAlreadyRead) {
@@ -404,12 +430,16 @@ async function markNotificationRead(id, isAlreadyRead) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'mark_read', id: id })
         });
-    } catch (e) {}
+    } catch (e) {
+        console.error('Failed to update notification read status on server:', e);
+    }
 
     let notifications = [];
     try {
         notifications = JSON.parse(localStorage.getItem('replate_notifications') || '[]');
-    } catch (e) {}
+    } catch (e) {
+        notifications = [];
+    }
 
     notifications = notifications.map(n => String(n.id) === String(id) ? { ...n, is_read: 1, read: true } : n);
     localStorage.setItem('replate_notifications', JSON.stringify(notifications));
@@ -424,12 +454,16 @@ async function dismissNotification(id) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'delete', id: id })
         });
-    } catch (e) {}
+    } catch (e) {
+        console.error('Failed to dismiss notification on server:', e);
+    }
 
     let notifications = [];
     try {
         notifications = JSON.parse(localStorage.getItem('replate_notifications') || '[]');
-    } catch (e) {}
+    } catch (e) {
+        notifications = [];
+    }
 
     notifications = notifications.filter(n => String(n.id) !== String(id));
     localStorage.setItem('replate_notifications', JSON.stringify(notifications));
@@ -437,7 +471,7 @@ async function dismissNotification(id) {
     loadUserNotifications();
 }
 
-// 6. Global Event Handlers
+// 7. Global Event Handlers
 function setupEventListeners() {
     const modal = document.getElementById('donationModal');
     const openBtn = document.getElementById('addDonationBtn');
@@ -464,12 +498,16 @@ function setupEventListeners() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'mark_all_read' })
                 });
-            } catch (e) {}
+            } catch (e) {
+                console.error('Error marking all notifications read:', e);
+            }
 
             let notifications = [];
             try {
                 notifications = JSON.parse(localStorage.getItem('replate_notifications') || '[]');
-            } catch (e) {}
+            } catch (e) {
+                notifications = [];
+            }
 
             notifications = notifications.map(n => ({ ...n, read: true, is_read: 1 }));
             localStorage.setItem('replate_notifications', JSON.stringify(notifications));
@@ -487,7 +525,9 @@ function setupEventListeners() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'clear_all' })
                 });
-            } catch (e) {}
+            } catch (e) {
+                console.error('Error clearing all notifications:', e);
+            }
 
             localStorage.setItem('replate_notifications', JSON.stringify([]));
             loadUserNotifications();
@@ -496,7 +536,7 @@ function setupEventListeners() {
     }
 
     if (form) {
-        form.onsubmit = async (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const foodName = document.getElementById('food_name')?.value?.trim() || '';
             const quantity = document.getElementById('quantity')?.value || '';
@@ -536,6 +576,6 @@ function setupEventListeners() {
             } catch (err) {
                 DashboardUtils.notify('Server error occurred while posting donation', 'error');
             }
-        };
+        });
     }
 }

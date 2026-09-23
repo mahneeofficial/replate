@@ -55,8 +55,19 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        $stmt = $pdo->query("SELECT category_id, category_id AS id, name, description FROM food_categories ORDER BY name ASC");
-        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $stmt = $pdo->query("SELECT * FROM food_categories ORDER BY name ASC");
+        $rawCategories = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $categories = array_map(function ($row) {
+            $catId = $row['category_id'] ?? $row['id'] ?? 0;
+            return [
+                'category_id' => (int)$catId,
+                'id'          => (int)$catId,
+                'name'        => $row['name'] ?? 'General Surplus',
+                'description' => $row['description'] ?? ''
+            ];
+        }, $rawCategories);
+
         echo json_encode(['success' => true, 'categories' => $categories]);
     } catch (Throwable $e) {
         error_log("Error in categories.php: " . $e->getMessage());

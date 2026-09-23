@@ -20,9 +20,9 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-top">
-            <a href="/dashboard" class="brand-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-                <img src="/images/logo.png" alt="RePlate Logo" style="height: 32px; width: auto; object-fit: contain;">
-                <span style="font-weight: 700; font-size: 1.2rem; color: #ffffff;">RePlate</span>
+            <a href="/dashboard" class="brand-logo">
+                <img src="/images/logo.png" alt="RePlate Logo" class="brand-logo-img">
+                <span class="brand-logo-text">RePlate</span>
             </a>
             <ul class="nav-menu">
                 <li class="nav-item active">
@@ -96,8 +96,8 @@
 
         <!-- Notifications Section -->
         <section class="content-card section-mb card-padded">
-            <div class="section-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 class="margin-0">Notifications</h3>
+            <div class="section-header-row">
+                <h3 class="margin-0"><i class="fa-solid fa-bell"></i> Notifications</h3>
                 <div class="btn-group-notif">
                     <button id="markAllReadBtn" class="btn-notif-action">
                         <i class="fa-solid fa-check-double"></i> Mark all read
@@ -116,7 +116,7 @@
         <section class="content-card">
             <div class="card-header">
                 <div>
-                    <h3>Available Food Nearby</h3>
+                    <h3><i class="fa-solid fa-utensils"></i> Available Food Nearby</h3>
                     <p class="card-subtitle">Listings matching your location & preferences</p>
                 </div>
             </div>
@@ -150,7 +150,7 @@
             <div class="form-row">
                 <div class="flex-2">
                     <label for="quantity" class="modal-label">Quantity</label>
-                    <input type="number" id="quantity" class="modal-input" required placeholder="10">
+                    <input type="number" id="quantity" class="modal-input" min="1" required placeholder="10">
                 </div>
                 <div class="flex-1">
                     <label for="unit" class="modal-label">Unit</label>

@@ -4,7 +4,7 @@ declare(strict_types=1);
 $host    = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1';
 $db      = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'replate';
 $user    = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'root';
-$pass    = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: '';
+$pass    = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'Briankimani???';
 $port    = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306';
 $charset = 'utf8mb4';
 
@@ -28,7 +28,8 @@ try {
     }
 
     echo json_encode([
-        "error" => "ERR_SYS_00: Database connection failed."
+        "success" => false,
+        "error"   => "ERR_SYS_00: Database connection failed."
     ]);
     exit;
 }

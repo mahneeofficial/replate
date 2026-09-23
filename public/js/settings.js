@@ -65,7 +65,13 @@ async function fetchSettings() {
 
         const setCheck = (id, val) => {
             const el = document.getElementById(id);
-            if (el) el.checked = Boolean(val);
+            if (el) {
+                if (val === null || val === undefined) {
+                    el.checked = true;
+                } else {
+                    el.checked = (val === true || val === 1 || val === '1' || val === 'true');
+                }
+            }
         };
 
         // Populate Form Fields matching settings.html
@@ -74,9 +80,9 @@ async function fetchSettings() {
         setVal('email', data.email);
         setVal('address', data.address || data.pickup_instructions);
 
-        setCheck('notify_inapp', data.notify_inapp ?? true);
-        setCheck('notify_whatsapp', data.notify_whatsapp ?? true);
-        setCheck('notify_email', data.notify_email ?? true);
+        setCheck('notify_inapp', data.notify_inapp);
+        setCheck('notify_whatsapp', data.notify_whatsapp);
+        setCheck('notify_email', data.notify_email);
 
     } catch (err) {
         showToast(err.message, 'error');

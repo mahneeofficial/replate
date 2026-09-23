@@ -6,6 +6,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadNotificationsPage();
     setupNotificationControls();
+
+    // Listen for cross-module notifications updates
+    window.addEventListener('replate_notifications_updated', () => {
+        loadNotificationsPage();
+    });
 });
 
 let currentFilter = 'all';
@@ -58,6 +63,7 @@ function renderNotificationsList() {
 
     const typeIcons = {
         account: 'fa-user-check',
+        welcome: 'fa-user-plus',
         security: 'fa-shield-halved',
         profile: 'fa-user-gear',
         donation: 'fa-box-archive',

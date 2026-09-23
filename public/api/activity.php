@@ -5,7 +5,15 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 set_exception_handler(function (Throwable $e) {
     error_log("Unhandled Exception in activity.php: " . $e->getMessage());
@@ -82,12 +90,24 @@ if ($method === 'GET') {
                 JOIN food_donations d ON r.donation_id = d.donation_id
                 WHERE r.recipient_id = :uid2
             )
+            UNION ALL
+            (
+                SELECT 
+                    'system_notification' AS activity_type,
+                    title AS title,
+                    message AS description,
+                    created_at,
+                    'Info' AS status
+                FROM notifications
+                WHERE user_id = :uid3
+            )
             ORDER BY created_at DESC
             LIMIT :limit
         ");
 
         $stmt->bindValue(':uid1', $currentUserId, PDO::PARAM_INT);
         $stmt->bindValue(':uid2', $currentUserId, PDO::PARAM_INT);
+        $stmt->bindValue(':uid3', $currentUserId, PDO::PARAM_INT);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 

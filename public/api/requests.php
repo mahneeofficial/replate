@@ -1,7 +1,67 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/init.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+set_exception_handler(function (Throwable $e) {
+    error_log("Unhandled Exception in requests.php: " . $e->getMessage());
+    if (!headers_sent()) {
+        http_response_code(500);
+    }
+    echo json_encode(["success" => false, "error" => "ERR_SYS_01: Internal Server Error"]);
+    exit;
+});
+
+$configDb = __DIR__ . '/../../config/db.php';
+$configSecurity = __DIR__ . '/../../config/Security.php';
+
+if (!file_exists($configDb)) {
+    $configDb = __DIR__ . '/../config/db.php';
+    $configSecurity = __DIR__ . '/../config/Security.php';
+}
+
+if (!file_exists($configDb)) {
+    http_response_code(500);
+    echo json_encode(["success" => false, "error" => "ERR_SYS_00: Database configuration missing."]);
+    exit;
+}
+
+require_once $configDb;
+
+if (file_exists($configSecurity)) {
+    require_once $configSecurity;
+    if (class_exists('Security') && method_exists('Security', 'applySecurityHeaders')) {
+        Security::applySecurityHeaders();
+    }
+}
+
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    http_response_code(500);
+    echo json_encode(["success" => false, "error" => "ERR_SYS_00: Invalid database connection."]);
+    exit;
+}
+
+function recordAuditLog(PDO $pdo, ?int $userId, string $eventType, string $details, string $logType = 'info'): void {
+    try {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+        $stmt = $pdo->prepare("INSERT INTO audit_logs (user_id, event_type, action_details, log_type, ip_address) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$userId, $eventType, $details, $logType, $ip]);
+    } catch (Throwable $e) {
+        error_log("Failed to write audit log: " . $e->getMessage());
+    }
+}
 
 $currentUserId = $_SESSION['user_id'] ?? $_SESSION['user']['id'] ?? $_SESSION['user']['user_id'] ?? null;
 
@@ -27,7 +87,7 @@ try {
                 JOIN food_donations d ON r.donation_id = d.donation_id
                 JOIN users u ON r.recipient_id = u.user_id
                 WHERE d.donor_id = ?
-                ORDER BY r.request_id DESC
+                ORDER BY r.created_at DESC
                 LIMIT 100
             ");
             $stmt->execute([$currentUserId]);
@@ -46,7 +106,7 @@ try {
             LEFT JOIN users u ON d.donor_id = u.user_id
             LEFT JOIN user_settings s ON u.user_id = s.user_id
             WHERE r.recipient_id = ?
-            ORDER BY r.request_id DESC
+            ORDER BY r.created_at DESC
             LIMIT 100
         ");
         $stmt->execute([$currentUserId]);
@@ -68,7 +128,7 @@ try {
 
     if ($method === 'POST') {
         $rawInput = file_get_contents("php://input");
-        $data = json_decode($rawInput, true);
+        $data = !empty($rawInput) ? json_decode($rawInput, true) : $_POST;
 
         if (!is_array($data)) {
             $data = $_POST;
@@ -77,7 +137,7 @@ try {
         $action = $data['action'] ?? 'create';
 
         if ($action === 'create') {
-            if (class_exists('Security')) {
+            if (class_exists('Security') && method_exists('Security', 'enforceRateLimit')) {
                 Security::enforceRateLimit('create_request', 15, 300);
             }
 
@@ -117,7 +177,7 @@ try {
             $stmtCheck = $pdo->prepare("
                 SELECT request_id 
                 FROM donation_requests 
-                WHERE donation_id = ? AND recipient_id = ? AND status != 'Rejected'
+                WHERE donation_id = ? AND recipient_id = ? AND status NOT IN ('Rejected', 'Cancelled')
             ");
             $stmtCheck->execute([$donationId, $currentUserId]);
             if ($stmtCheck->fetch()) {
@@ -132,6 +192,7 @@ try {
                 VALUES (?, ?, ?, 'Pending')
             ");
             $stmtReq->execute([$donationId, $currentUserId, $donation['quantity']]);
+            $requestId = (int)$pdo->lastInsertId();
 
             try {
                 $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)");
@@ -145,6 +206,8 @@ try {
                 error_log("Failed to insert notification: " . $e->getMessage());
             }
 
+            recordAuditLog($pdo, (int)$currentUserId, 'REQUEST_CREATED', "Submitted claim request #{$requestId} for donation #{$donationId}", 'info');
+
             $pdo->commit();
             http_response_code(201);
             echo json_encode(["success" => true, "message" => "Donation requested successfully."]);
@@ -152,7 +215,7 @@ try {
         }
 
         if ($action === 'approve' || $action === 'reject') {
-            if (class_exists('Security')) {
+            if (class_exists('Security') && method_exists('Security', 'enforceRateLimit')) {
                 Security::enforceRateLimit('manage_request', 20, 300);
             }
 
@@ -197,8 +260,8 @@ try {
                 exit;
             }
 
-            $recipientId = $req['recipient_id'];
-            $donationId = $req['donation_id'];
+            $recipientId = (int)$req['recipient_id'];
+            $donationId = (int)$req['donation_id'];
             $newStatus = ($action === 'approve') ? 'Approved' : 'Rejected';
             $notifTitle = ($action === 'approve') ? 'Request Approved' : 'Request Rejected';
             $notifType = ($action === 'approve') ? 'request' : 'warning';
@@ -233,9 +296,13 @@ try {
                         error_log("Failed to insert notification: " . $e->getMessage());
                     }
                 }
+
+                recordAuditLog($pdo, (int)$currentUserId, 'REQUEST_APPROVED', "Approved request #{$requestId} for donation #{$donationId}", 'info');
             } else {
                 $stmtDon = $pdo->prepare("UPDATE food_donations SET status = 'Available' WHERE donation_id = ?");
                 $stmtDon->execute([$donationId]);
+
+                recordAuditLog($pdo, (int)$currentUserId, 'REQUEST_REJECTED', "Rejected request #{$requestId} for donation #{$donationId}", 'warning');
             }
 
             try {
@@ -247,6 +314,28 @@ try {
 
             $pdo->commit();
             echo json_encode(['success' => true, 'message' => "Request {$newStatus} successfully."]);
+            exit;
+        }
+
+        if ($action === 'cancel') {
+            $requestId = (int)($data['request_id'] ?? 0);
+
+            if (!$requestId) {
+                http_response_code(400);
+                echo json_encode(["success" => false, "error" => "ERR_VAL_02: Request ID is required."]);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("UPDATE donation_requests SET status = 'Cancelled' WHERE request_id = ? AND recipient_id = ? AND status = 'Pending'");
+            $stmt->execute([$requestId, $currentUserId]);
+
+            if ($stmt->rowCount() > 0) {
+                recordAuditLog($pdo, (int)$currentUserId, 'REQUEST_CANCELLED', "Cancelled request #{$requestId}", 'info');
+                echo json_encode(['success' => true, 'message' => "Request cancelled successfully."]);
+            } else {
+                http_response_code(400);
+                echo json_encode(["success" => false, "error" => "ERR_REQ_06: Request could not be cancelled. It may already be processed."]);
+            }
             exit;
         }
 

@@ -5,14 +5,17 @@
 
 const UIEngine = {
     escapeHTML(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     },
 
     escapeAttr(str) {
-        if (!str) return '';
+        if (str === null || str === undefined) return '';
         return String(str)
             .replace(/&/g, '&amp;')
             .replace(/"/g, '&quot;')
@@ -92,13 +95,8 @@ const UIEngine = {
             const safeMessage = this.escapeHTML(friendlyMessage);
 
             alertBox.className = `alert-box alert-${type} show`;
-            alertBox.style.color = type === 'error' ? '#991b1b' : '#065f46';
-            alertBox.style.backgroundColor = type === 'error' ? '#fef2f2' : '#ecfdf5';
-            alertBox.style.border = type === 'error' ? '1px solid #fecaca' : '1px solid #a7f3d0';
             alertBox.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${safeMessage}</span>`;
             alertBox.style.display = 'flex';
-            alertBox.style.alignItems = 'center';
-            alertBox.style.gap = '8px';
         }
 
         if (targetId === 'alertBox') {
@@ -111,7 +109,7 @@ const UIEngine = {
         if (alertBox) {
             alertBox.style.display = 'none';
             alertBox.innerHTML = '';
-            alertBox.classList.remove('show');
+            alertBox.className = 'alert-box';
         }
     },
 
@@ -121,7 +119,7 @@ const UIEngine = {
         } else {
             localStorage.removeItem('replate_user');
             localStorage.removeItem('user');
-            window.location.href = '/login.html';
+            window.location.href = '/login';
         }
     },
 

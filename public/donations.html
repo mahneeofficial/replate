@@ -55,7 +55,7 @@
             <p class="page-subtitle">List new surplus food or review items available across the platform.</p>
         </header>
 
-        <!-- Post Surplus Section (Hidden dynamically for Recipients) -->
+        <!-- Post Surplus Section (Hidden dynamically for Recipients in donations.js) -->
         <section class="content-card section-mb" id="postSurplusSection">
             <div class="card-header">
                 <h3><i class="fa-solid fa-plus-circle"></i> Post Surplus Food</h3>
@@ -80,7 +80,7 @@
                 <div class="form-row">
                     <div class="flex-1">
                         <label for="page_quantity" class="form-label">Quantity</label>
-                        <input type="number" id="page_quantity" class="form-input" required placeholder="5">
+                        <input type="number" id="page_quantity" class="form-input" min="1" required placeholder="5">
                     </div>
                     <div class="flex-1">
                         <label for="page_unit" class="form-label">Unit</label>
@@ -92,7 +92,7 @@
                     </div>
                 </div>
 
-                <div class="form-group-modal">
+                <div class="form-group">
                     <label for="page_pickup_location" class="form-label">Pickup Location</label>
                     <input type="text" id="page_pickup_location" class="form-input" placeholder="e.g. Community Hub, Westlands" required>
                 </div>
@@ -107,7 +107,7 @@
 
         <section class="content-card">
             <div class="card-header">
-                <h3 id="donationsListHeading">Food Surplus Listings</h3>
+                <h3 id="donationsListHeading"><i class="fa-solid fa-list-check"></i> Food Surplus Listings</h3>
             </div>
             <div id="userDonationsContainer">
                 <div class="loading-state">
@@ -119,35 +119,6 @@
 </div>
 
 <script src="/js/ui.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    let user = null;
-    try {
-        user = JSON.parse(localStorage.getItem('replate_user') || localStorage.getItem('user'));
-        if (user) {
-            const role = (user.role || user.user_type || 'RECIPIENT').toLowerCase();
-            document.getElementById('userNameDisplay').textContent = user.full_name || user.username || user.name || 'User Profile';
-            document.getElementById('userRoleDisplay').textContent = role.toUpperCase();
-
-            const postSection = document.getElementById('postSurplusSection');
-            if (postSection && role === 'recipient') {
-                postSection.style.display = 'none';
-            }
-        }
-    } catch(e) {
-        console.error('Failed to parse user profile:', e);
-    }
-
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('replate_user');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
-        });
-    }
-});
-</script>
 <script src="/js/donations.js"></script>
 </body>
 </html>

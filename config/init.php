@@ -17,8 +17,16 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 3. Set Default JSON Headers
+// 3. Set Default JSON & CORS Headers
 header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 // 4. Include Security and Apply Security Headers
 $securityPath = __DIR__ . '/Security.php';

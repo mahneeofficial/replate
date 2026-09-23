@@ -4,34 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RePlate — Account Settings</title>
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/dashboard.css">
     <link rel="stylesheet" href="/css/settings.css">
 </head>
 <body>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <div class="app-container">
     <!-- Unified Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-top">
-            <a href="/dashboard.html" class="brand-logo">
-                <div class="logo-icon"><i class="fa-solid fa-utensils"></i></div>
-                <span>RePlate</span>
+            <a href="/dashboard" class="brand-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+                <img src="/images/logo.png" alt="RePlate Logo" style="height: 32px; width: auto; object-fit: contain;">
+                <span style="font-weight: 700; font-size: 1.2rem; color: #ffffff;">RePlate</span>
             </a>
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="/dashboard.html"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a>
+                    <a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a>
                 </li>
                 <li class="nav-item">
-                    <a href="/donations.html"><i class="fa-solid fa-box-archive"></i> <span>Food Donations</span></a>
+                    <a href="/donations"><i class="fa-solid fa-box-archive"></i> <span>Food Donations</span></a>
                 </li>
                 <li class="nav-item">
-                    <a href="/activity.html"><i class="fa-solid fa-clock-rotate-left"></i> <span>Activity Log</span></a>
+                    <a href="/requests"><i class="fa-solid fa-hand-holding-heart"></i> <span>Requests & Claims</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/activity"><i class="fa-solid fa-clock-rotate-left"></i> <span>Activity Log</span></a>
                 </li>
                 <li class="nav-item active">
-                    <a href="/settings.html"><i class="fa-solid fa-sliders"></i> <span>Settings</span></a>
+                    <a href="/settings"><i class="fa-solid fa-sliders"></i> <span>Settings</span></a>
                 </li>
             </ul>
         </div>
@@ -41,7 +48,7 @@
             <div class="user-avatar" id="userAvatar"><i class="fa-solid fa-circle-user"></i></div>
             <div class="user-info">
                 <h4 id="userNameDisplay">Loading...</h4>
-                <p id="userRoleDisplay">—</p>
+                <p id="userRoleDisplay">MEMBER</p>
             </div>
             <button class="btn-logout" id="logoutBtn" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
         </div>

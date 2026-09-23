@@ -35,14 +35,18 @@ class Security {
 
     public static function isDisposableEmail(string $email): bool {
         $parts = explode('@', strtolower(trim($email)));
-        if (count($parts) !== 2) return true;
+        if (count($parts) !== 2) {
+            return true;
+        }
         return in_array($parts[1], self::$disposableDomains, true);
     }
 
     public static function normalizeEmail(string $email): string {
         $email = strtolower(trim($email));
         $parts = explode('@', $email);
-        if (count($parts) !== 2) return $email;
+        if (count($parts) !== 2) {
+            return $email;
+        }
 
         $username = $parts[0];
         $domain = $parts[1];
@@ -109,7 +113,10 @@ class Security {
                 header("Content-Type: application/json; charset=UTF-8");
             }
             $remaining = max(1, (int)ceil(($data['expires'] - time()) / 60));
-            echo json_encode(['error' => "ERR_SEC_05: Rate limit exceeded. Try again in {$remaining} minutes."]);
+            echo json_encode([
+                'success' => false,
+                'error' => "ERR_SEC_05: Rate limit exceeded. Try again in {$remaining} minutes."
+            ]);
             exit;
         }
     }

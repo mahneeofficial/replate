@@ -101,7 +101,28 @@ try {
         $action = trim((string)($data['action'] ?? ''));
         $notifId = isset($data['notification_id']) ? (int)$data['notification_id'] : (isset($data['id']) ? (int)$data['id'] : null);
 
-        if (($action === 'mark_read' || $action === 'read') && $notifId) {
+        if ($action === 'create' || $action === 'add') {
+            $title = trim((string)($data['title'] ?? ''));
+            $message = trim((string)($data['message'] ?? ''));
+            $type = trim((string)($data['type'] ?? 'info'));
+            $targetUserId = isset($data['user_id']) ? (int)$data['user_id'] : $userId;
+
+            if (empty($title) || empty($message)) {
+                http_response_code(400);
+                echo json_encode(["success" => false, "error" => "ERR_VAL_01: Title and message are required."]);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO notifications (user_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())");
+            $stmt->execute([$targetUserId, $title, $message, $type]);
+
+            echo json_encode([
+                "success" => true, 
+                "status" => "success", 
+                "notification_id" => (int)$pdo->lastInsertId()
+            ]);
+            exit;
+        } elseif (($action === 'mark_read' || $action === 'read') && $notifId) {
             $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
             $stmt->execute([$notifId, $userId]);
         } elseif ($action === 'mark_all_read') {
@@ -115,7 +136,7 @@ try {
             $stmt->execute([$userId]);
         } else {
             http_response_code(400);
-            echo json_encode(["success" => false, "error" => "Invalid action or missing notification ID."]);
+            echo json_encode(["success" => false, "error" => "ERR_VAL_01: Invalid action or missing notification ID."]);
             exit;
         }
 
@@ -124,14 +145,14 @@ try {
     }
 
     http_response_code(405);
-    echo json_encode(["success" => false, "error" => "Method not allowed."]);
+    echo json_encode(["success" => false, "error" => "ERR_SYS_03: Method not allowed."]);
 
 } catch (Throwable $e) {
     error_log("Error in notifications.php: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         "success" => false, 
-        "error" => "Database operation failed."
+        "error" => "ERR_SYS_01: Database operation failed."
     ]);
     exit;
 }

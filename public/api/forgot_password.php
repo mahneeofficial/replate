@@ -5,32 +5,49 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-header("Content-Type: application/json; charset=UTF-8");
-
 set_exception_handler(function (Throwable $e) {
     error_log("Unhandled Exception in forgot_password.php: " . $e->getMessage());
     if (!headers_sent()) {
         http_response_code(500);
+        header("Content-Type: application/json; charset=UTF-8");
     }
     echo json_encode(["success" => false, "error" => "ERR_SYS_01: Internal Server Error"]);
     exit;
 });
 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["success" => false, "error" => "ERR_SYS_03: Method not allowed."]);
+    exit;
+}
+
 $configDb = __DIR__ . '/../../config/db.php';
-$configMail = __DIR__ . '/../../config/mail.php';
 $configSecurity = __DIR__ . '/../../config/Security.php';
+$configMail = __DIR__ . '/../../config/mail.php';
+
+if (!file_exists($configDb)) {
+    $configDb = __DIR__ . '/../config/db.php';
+    $configSecurity = __DIR__ . '/../config/Security.php';
+    $configMail = __DIR__ . '/../config/mail.php';
+}
 
 if (!file_exists($configDb)) {
     http_response_code(500);
-    echo json_encode(["success" => false, "error" => "ERR_SYS_01: Database configuration file missing."]);
+    echo json_encode(["success" => false, "error" => "ERR_SYS_00: Database configuration missing."]);
     exit;
 }
 
 require_once $configDb;
-
-if (file_exists($configMail)) {
-    require_once $configMail;
-}
 
 if (file_exists($configSecurity)) {
     require_once $configSecurity;
@@ -39,19 +56,22 @@ if (file_exists($configSecurity)) {
     }
 }
 
+if (file_exists($configMail)) {
+    require_once $configMail;
+}
+
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
     echo json_encode(["success" => false, "error" => "ERR_SYS_00: Invalid database connection."]);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(["success" => false, "error" => "ERR_SYS_02: Method not allowed."]);
-    exit;
+$rawInput = file_get_contents("php://input");
+$input = !empty($rawInput) ? json_decode($rawInput, true) : null;
+if (!is_array($input)) {
+    $input = $_POST;
 }
 
-$input = json_decode(file_get_contents("php://input"), true) ?? $_POST;
 $action = $input['action'] ?? '';
 
 try {
@@ -60,7 +80,7 @@ try {
             Security::enforceRateLimit('password_reset_request', 3, 600);
         }
 
-        $email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+        $email = filter_var(trim((string)($input['email'] ?? '')), FILTER_VALIDATE_EMAIL);
         if (!$email) {
             http_response_code(400);
             echo json_encode(["success" => false, "error" => "ERR_VAL_02: Please enter a valid email address."]);
@@ -80,11 +100,15 @@ try {
         $otpCode = (string) random_int(100000, 999999);
         $expiresAt = gmdate('Y-m-d H:i:s', time() + (15 * 60));
 
+        $pdo->beginTransaction();
+
         $stmtDelete = $pdo->prepare("DELETE FROM password_resets WHERE user_id = ?");
         $stmtDelete->execute([$user['user_id']]);
 
         $stmtInsert = $pdo->prepare("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)");
         $stmtInsert->execute([$user['user_id'], $otpCode, $expiresAt]);
+
+        $pdo->commit();
 
         $subject = "RePlate — Password Reset Code";
         $body = "
@@ -120,9 +144,9 @@ try {
             Security::enforceRateLimit('password_reset_verify', 5, 600);
         }
 
-        $email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+        $email = filter_var(trim((string)($input['email'] ?? '')), FILTER_VALIDATE_EMAIL);
         $token = trim((string)($input['token'] ?? $input['code'] ?? ''));
-        $newPassword = $input['password'] ?? $input['new_password'] ?? '';
+        $newPassword = (string)($input['password'] ?? $input['new_password'] ?? '');
 
         if (!$email) {
             http_response_code(400);

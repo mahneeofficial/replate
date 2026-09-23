@@ -8,10 +8,13 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Stylesheets -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/login.css">
 </head>
@@ -27,15 +30,15 @@
     <!-- Left Hero Banner -->
     <div class="hero-side">
         <div class="slideshow-bg">
-            <div class="slide"></div>
-            <div class="slide"></div>
-            <div class="slide"></div>
+            <div class="slide slide-1"></div>
+            <div class="slide slide-2"></div>
+            <div class="slide slide-3"></div>
         </div>
         <div class="hero-overlay"></div>
 
         <div class="hero-content">
-            <a href="/" class="brand-logo">
-                <img src="images/logo.png" alt="RePlate Logo" style="height: 48px; width: auto; object-fit: contain;">
+            <a href="index.html" class="brand-logo">
+                <img src="images/logo.png" alt="RePlate Logo" class="brand-logo-img">
             </a>
             <h1 class="hero-title">Connecting Surplus Food with Hungry Hearts</h1>
             <p class="hero-subtitle">Log in to manage your donations, track claims, and continue making a tangible difference in your community today.</p>
@@ -45,9 +48,9 @@
             <div class="stat-icon">
                 <i class="fa-solid fa-heart"></i>
             </div>
-            <div>
-                <h4 style="font-size: 0.95rem; font-weight: 700;">Over 10,000+ Meals Saved</h4>
-                <p style="font-size: 0.8rem; opacity: 0.85;">Join thousands of eco-conscious community leaders.</p>
+            <div class="stat-details">
+                <h4>Over 10,000+ Meals Saved</h4>
+                <p>Join thousands of eco-conscious community leaders.</p>
             </div>
         </div>
     </div>
@@ -67,7 +70,7 @@
                 <label class="form-label" for="email">Email Address</label>
                 <div class="input-wrapper">
                     <i class="fa-regular fa-envelope field-icon"></i>
-                    <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="name@example.com" required autocomplete="email">
                 </div>
             </div>
 
@@ -75,14 +78,14 @@
                 <label class="form-label" for="password">Password</label>
                 <div class="input-wrapper">
                     <i class="fa-solid fa-lock field-icon"></i>
-                    <input type="password" id="password" class="form-input" placeholder="Enter password" required>
-                    <i class="fa-regular fa-eye toggle-password" id="togglePassword"></i>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+                    <i class="fa-regular fa-eye-slash toggle-password" id="togglePassword" role="button" aria-label="Toggle password visibility"></i>
                 </div>
             </div>
 
             <div class="form-options">
                 <label class="remember-me">
-                    <input type="checkbox" id="rememberMe"> Remember me
+                    <input type="checkbox" id="rememberMe" name="remember"> Remember me
                 </label>
                 <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
             </div>
@@ -91,51 +94,55 @@
         </form>
 
         <div class="login-footer">
-            Don't have an account? <a href="/register">Create Account</a>
+            Don't have an account? <a href="register.html">Create Account</a>
         </div>
     </div>
 </div>
 
 <!-- Password Reset Modal Overlay -->
-<div id="forgotPasswordModal" style="display:none; position:fixed; inset:0; background:rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); align-items:center; justify-content:center; z-index:9999; padding:1rem;">
-    <div style="background:#ffffff; border-radius:16px; padding:32px; width:100%; max-width:420px; color:#0f172a; box-shadow:0 20px 25px -5px rgba(0, 0, 0, 0.2); position:relative;">
+<div id="forgotPasswordModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
         
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h3 style="margin:0; font-size:1.25rem; font-weight:700; color:#0f172a;">Reset Password</h3>
-            <button type="button" id="closeFpModal" style="background:transparent; border:none; color:#64748b; font-size:1.25rem; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-header">
+            <h3>Reset Password</h3>
+            <button type="button" id="closeFpModal" class="modal-close-btn" aria-label="Close Modal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
-        <div id="fpStatusBox" class="alert-box" style="display:none; margin-bottom:16px; padding:10px; border-radius:8px; font-size:0.875rem;"></div>
+        <div id="fpStatusBox" class="alert-box" style="display: none;"></div>
 
         <!-- Step 1: Request Code Form -->
         <form id="fpRequestForm">
-            <p style="font-size:0.875rem; color:#475569; margin-bottom:16px; line-height:1.5;">Enter the email address associated with your RePlate account and we will send you a 6-digit verification code.</p>
-            <div class="form-group" style="margin-bottom:16px;">
+            <p class="modal-description">Enter the email address associated with your RePlate account and we will send you a 6-digit verification code.</p>
+            <div class="form-group">
                 <div class="input-wrapper">
                     <i class="fa-regular fa-envelope field-icon"></i>
-                    <input type="email" id="fpEmail" class="form-input" placeholder="name@example.com" required style="width:100%; padding:10px 12px 10px 38px; border:1px solid #cbd5e1; border-radius:8px;">
+                    <input type="email" id="fpEmail" class="form-input" placeholder="name@example.com" required>
                 </div>
             </div>
-            <button type="submit" id="fpRequestBtn" class="btn-submit" style="width:100%; padding:12px; background:#10b981; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Send Verification Code</button>
+            <button type="submit" id="fpRequestBtn" class="btn-submit">Send Verification Code</button>
         </form>
 
         <!-- Step 2: Confirm OTP & New Password Form -->
-        <form id="fpResetForm" style="display:none;">
-            <p style="font-size:0.875rem; color:#475569; margin-bottom:16px; line-height:1.5;">Enter the 6-digit code sent to your email and your new password.</p>
-            <div class="form-group" style="margin-bottom:12px;">
+        <form id="fpResetForm" style="display: none;">
+            <p class="modal-description">Enter the 6-digit code sent to your email and your new password.</p>
+            <div class="form-group">
                 <div class="input-wrapper">
                     <i class="fa-solid fa-key field-icon"></i>
-                    <input type="text" id="fpCode" class="form-input" placeholder="6-Digit Verification Code" maxlength="6" required style="width:100%; padding:10px 12px 10px 38px; border:1px solid #cbd5e1; border-radius:8px;">
+                    <input type="text" id="fpCode" class="form-input" placeholder="6-Digit Verification Code" maxlength="6" required>
                 </div>
             </div>
-            <div class="form-group" style="margin-bottom:16px;">
+            <div class="form-group">
                 <div class="input-wrapper">
                     <i class="fa-solid fa-lock field-icon"></i>
-                    <input type="password" id="fpNewPassword" class="form-input" placeholder="New Password (min 8 chars)" minlength="8" required style="width:100%; padding:10px 12px 10px 38px; border:1px solid #cbd5e1; border-radius:8px;">
+                    <input type="password" id="fpNewPassword" class="form-input" placeholder="New Password (min 8 chars)" minlength="8" required>
+                    <i class="fa-regular fa-eye-slash toggle-password" id="toggleFpPassword" role="button" aria-label="Toggle new password visibility"></i>
                 </div>
             </div>
-            <button type="submit" id="fpResetBtn" class="btn-submit" style="width:100%; padding:12px; background:#10b981; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Update Password</button>
+            <button type="submit" id="fpResetBtn" class="btn-submit">Update Password</button>
         </form>
+
     </div>
 </div>
 
@@ -143,17 +150,24 @@
 <script src="js/ui.js"></script>
 <script src="js/auth.js"></script>
 <script>
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
+    document.addEventListener('DOMContentLoaded', () => {
+        const setupPasswordToggle = (toggleId, inputId) => {
+            const toggleIcon = document.getElementById(toggleId);
+            const passwordInput = document.getElementById(inputId);
 
-    if (togglePassword && passwordInput) {
-        togglePassword.addEventListener('click', () => {
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
-            togglePassword.classList.toggle('fa-eye', !isPassword);
-            togglePassword.classList.toggle('fa-eye-slash', isPassword);
-        });
-    }
+            if (toggleIcon && passwordInput) {
+                toggleIcon.addEventListener('click', () => {
+                    const isPassword = passwordInput.type === 'password';
+                    passwordInput.type = isPassword ? 'text' : 'password';
+                    toggleIcon.classList.toggle('fa-eye', isPassword);
+                    toggleIcon.classList.toggle('fa-eye-slash', !isPassword);
+                });
+            }
+        };
+
+        setupPasswordToggle('togglePassword', 'password');
+        setupPasswordToggle('toggleFpPassword', 'fpNewPassword');
+    });
 </script>
 </body>
 </html>

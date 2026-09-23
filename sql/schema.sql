@@ -1,25 +1,42 @@
+-- RePlate Database Schema Definition
 CREATE DATABASE IF NOT EXISTS replate CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE replate;
 
--- Users Table
-CREATE TABLE IF NOT EXISTS users (
+-- Disable foreign key checks for clean teardown and creation
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS password_resets;
+DROP TABLE IF EXISTS auth_tokens;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS reports;
+DROP TABLE IF EXISTS donation_requests;
+DROP TABLE IF EXISTS food_donations;
+DROP TABLE IF EXISTS food_categories;
+DROP TABLE IF EXISTS user_settings;
+DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 1. Users Table
+CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     org_name VARCHAR(255) NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     normalized_email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('recipient', 'donor', 'admin') DEFAULT 'recipient',
-    status ENUM('Active', 'Suspended', 'Pending') DEFAULT 'Active',
-    verification_status ENUM('Unverified', 'Pending', 'Verified', 'Rejected') DEFAULT 'Unverified',
+    role ENUM('recipient', 'donor', 'admin') NOT NULL DEFAULT 'recipient',
+    status ENUM('Active', 'Suspended', 'Pending') NOT NULL DEFAULT 'Active',
+    verification_status ENUM('Unverified', 'Pending', 'Verified', 'Rejected') NOT NULL DEFAULT 'Unverified',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_role_status (role, status),
     INDEX idx_verification (verification_status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- User Settings Table (1-to-1 Relationship)
-CREATE TABLE IF NOT EXISTS user_settings (
+-- 2. User Settings Table
+CREATE TABLE user_settings (
     setting_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     discretion_mode TINYINT(1) DEFAULT 0,
@@ -41,25 +58,33 @@ CREATE TABLE IF NOT EXISTS user_settings (
     tax_receipts_enabled TINYINT(1) DEFAULT 0,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Food Categories Table
-CREATE TABLE IF NOT EXISTS food_categories (
+-- 3. Food Categories Table
+CREATE TABLE food_categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO food_categories (category_id, name) VALUES (1, 'General Surplus');
+-- Seed Default Food Categories
+INSERT INTO food_categories (category_id, name, description) VALUES
+(1, 'General Surplus', 'General unparsed surplus food items'),
+(2, 'Prepared Meals', 'Cooked and ready-to-eat meals'),
+(3, 'Fresh Produce', 'Fruits, vegetables, and farm products'),
+(4, 'Bakery Goods', 'Fresh bread, pastries, and baked items'),
+(5, 'Packaged & Canned', 'Non-perishable shelf-stable items')
+ON DUPLICATE KEY UPDATE name=VALUES(name), description=VALUES(description);
 
--- Food Donations Table
-CREATE TABLE IF NOT EXISTS food_donations (
+-- 4. Food Donations Table
+CREATE TABLE food_donations (
     donation_id INT AUTO_INCREMENT PRIMARY KEY,
     donor_id INT NOT NULL,
     category_id INT NULL DEFAULT 1,
     food_name VARCHAR(150) NOT NULL,
     description TEXT NULL,
-    quantity DECIMAL(10,2) NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     unit VARCHAR(20) DEFAULT 'kg',
     expiry_date DATETIME NOT NULL,
     pickup_location VARCHAR(255) NOT NULL,
@@ -70,14 +95,14 @@ CREATE TABLE IF NOT EXISTS food_donations (
     INDEX idx_donor (donor_id),
     FOREIGN KEY (donor_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES food_categories(category_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Donation Requests Table
-CREATE TABLE IF NOT EXISTS donation_requests (
+-- 5. Donation Requests Table
+CREATE TABLE donation_requests (
     request_id INT AUTO_INCREMENT PRIMARY KEY,
     donation_id INT NOT NULL,
     recipient_id INT NOT NULL,
-    quantity_requested DECIMAL(10,2) NOT NULL,
+    quantity_requested DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     notes TEXT NULL,
     collection_date DATETIME NULL,
     status ENUM('Pending', 'Approved', 'Rejected', 'Completed') DEFAULT 'Pending',
@@ -87,10 +112,10 @@ CREATE TABLE IF NOT EXISTS donation_requests (
     INDEX idx_recipient_status (recipient_id, status),
     FOREIGN KEY (donation_id) REFERENCES food_donations(donation_id) ON DELETE CASCADE,
     FOREIGN KEY (recipient_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Audit Logs Table
-CREATE TABLE IF NOT EXISTS audit_logs (
+-- 6. Audit Logs Table
+CREATE TABLE audit_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NULL,
     event_type VARCHAR(100) NOT NULL,
@@ -101,10 +126,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     INDEX idx_user_log (user_id),
     INDEX idx_type_created (log_type, created_at),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Notifications Table
-CREATE TABLE IF NOT EXISTS notifications (
+-- 7. Notifications Table
+CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
@@ -114,10 +139,10 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_unread (user_id, is_read, created_at),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Remember Me Authentication Tokens Table
-CREATE TABLE IF NOT EXISTS auth_tokens (
+-- 8. Auth Tokens Table
+CREATE TABLE auth_tokens (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
     selector VARCHAR(64) NOT NULL UNIQUE,
     hashed_validator VARCHAR(64) NOT NULL,
@@ -126,10 +151,10 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_tokens (user_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Password Resets Table
-CREATE TABLE IF NOT EXISTS password_resets (
+-- 9. Password Resets Table
+CREATE TABLE password_resets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     token VARCHAR(64) NOT NULL UNIQUE,
@@ -137,14 +162,14 @@ CREATE TABLE IF NOT EXISTS password_resets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_token (user_id, token),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Reports Table
-CREATE TABLE IF NOT EXISTS reports (
+-- 10. Reports Table
+CREATE TABLE reports (
     report_id INT AUTO_INCREMENT PRIMARY KEY,
     generated_by INT NOT NULL,
     report_type VARCHAR(100) NOT NULL,
     content TEXT NULL,
     generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (generated_by) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -65,6 +65,7 @@ switch ($uri) {
 
     case '/api/notifications':
     case '/notifications':
+    case '/api/notifications.php':
         require __DIR__ . '/api/notifications.php';
         break;
 
@@ -81,6 +82,16 @@ switch ($uri) {
     case '/api/settings':
     case '/api/settings.php':
         require __DIR__ . '/api/settings.php';
+        break;
+
+    case '/api/reports':
+    case '/api/reports.php':
+        require __DIR__ . '/api/reports.php';
+        break;
+
+    case '/api/activity':
+    case '/api/activity.php':
+        require __DIR__ . '/api/activity.php';
         break;
 
     default:

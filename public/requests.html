@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RePlate — Activity Log</title>
+    <title>RePlate — Claim Requests</title>
     <link rel="icon" type="image/png" href="/images/logo.png">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/notifications.css">
+    <link rel="stylesheet" href="/css/requests.css">
 </head>
 <body>
 
@@ -30,10 +30,10 @@
                 <li class="nav-item">
                     <a href="/donations"><i class="fa-solid fa-box-archive"></i> <span>Food Donations</span></a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item active">
                     <a href="/requests"><i class="fa-solid fa-hand-holding-heart"></i> <span>Requests & Claims</span></a>
                 </li>
-                <li class="nav-item active">
+                <li class="nav-item">
                     <a href="/activity"><i class="fa-solid fa-clock-rotate-left"></i> <span>Activity Log</span></a>
                 </li>
                 <li class="nav-item">
@@ -54,17 +54,31 @@
 
     <main class="main-content">
         <header class="page-header">
-            <h1 class="page-title">Recent Activity</h1>
-            <p class="page-subtitle">Audit trail and history of claimed, delivered, or posted food items.</p>
+            <h1 class="page-title">Requests & Claim Management</h1>
+            <p class="page-subtitle">Track, claim, and review incoming or submitted food surplus requests.</p>
         </header>
-        
+
+        <!-- Requests Summary & Status Filters -->
+        <section class="content-card section-mb">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3><i class="fa-solid fa-filter"></i> Filter Requests</h3>
+                <div class="filter-actions">
+                    <button class="btn-filter active" data-status="all">All</button>
+                    <button class="btn-filter" data-status="Pending">Pending</button>
+                    <button class="btn-filter" data-status="Approved">Approved</button>
+                    <button class="btn-filter" data-status="Completed">Completed</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Requests List Container -->
         <section class="content-card">
             <div class="card-header">
-                <h3><i class="fa-solid fa-list-ul"></i> Audit Trail & Claim History</h3>
+                <h3><i class="fa-solid fa-list-check"></i> Active Claim Requests</h3>
             </div>
-            <div id="activityLogContainer" class="activity-log-container">
+            <div id="requestsListContainer">
                 <div class="loading-state">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Fetching activity history...
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading claim requests...
                 </div>
             </div>
         </section>
@@ -72,6 +86,6 @@
 </div>
 
 <script src="/js/ui.js"></script>
-<script src="/js/activity.js"></script>
+<script src="/js/requests.js"></script>
 </body>
 </html>

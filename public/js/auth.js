@@ -7,7 +7,8 @@ const AuthEngine = {
     endpoints: {
         users: '/api/users.php',
         donations: '/api/donations.php',
-        forgotPassword: '/api/forgot_password.php'
+        forgotPassword: '/api/forgot_password.php',
+        settings: '/api/settings.php'
     },
 
     errorDictionary: {
@@ -17,6 +18,8 @@ const AuthEngine = {
         'ERR_VAL_04': 'Passwords do not match.',
         'ERR_VAL_05': 'Full name is required for registration.',
         'ERR_VAL_06': 'Please select an account type.',
+        'ERR_VAL_07': 'Current password is required to change password.',
+        'ERR_VAL_08': 'Current password is incorrect.',
         
         'ERR_AUTH_01': 'Invalid email or password. Please check your credentials and try again.',
         'ERR_AUTH_02': 'No account found with this email address.',
@@ -44,19 +47,22 @@ const AuthEngine = {
             errStr = rawError.message || rawError.error || rawError.code || JSON.stringify(rawError);
         }
 
-        if (typeof errStr === 'string' && errStr.includes(':')) {
-            const parts = errStr.split(':');
-            const customMessage = parts.slice(1).join(':').trim();
-            if (customMessage) return customMessage;
-        }
+        if (typeof errStr !== 'string') return 'An unexpected error occurred.';
 
+        // 1. Check direct error code matches first
         for (const [code, userMessage] of Object.entries(this.errorDictionary)) {
-            if (typeof errStr === 'string' && errStr.includes(code)) {
+            if (errStr.includes(code)) {
                 return userMessage;
             }
         }
 
-        return typeof errStr === 'string' ? errStr.replace(/^ERR_[A-Z0-9_]+:\s*/, '') : 'An error occurred.';
+        // 2. Fall back to custom string message if separated by colon
+        if (errStr.includes(':')) {
+            const customMessage = errStr.split(':').slice(1).join(':').trim();
+            if (customMessage) return customMessage;
+        }
+
+        return errStr.replace(/^ERR_[A-Z0-9_]+:\s*/, '') || 'An error occurred.';
     },
 
     async _handleResponse(response) {
@@ -161,9 +167,10 @@ const AuthEngine = {
         try {
             await fetch(`${this.endpoints.users}?action=logout`, { method: 'POST' });
         } catch (e) {
-            // Proceed with client side cleanup regardless of network status
+            // Proceed with client side cleanup
         } finally {
             localStorage.removeItem('replate_user');
+            localStorage.removeItem('user');
             window.location.href = '/login';
         }
     },

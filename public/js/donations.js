@@ -12,16 +12,26 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', handleDonationSubmit);
     }
 
-    // Event delegation for claim buttons (prevents inline onclick escaping bugs)
+    // Event delegation for action buttons (Claim and Delete)
     const container = document.getElementById('userDonationsContainer');
     if (container) {
         container.addEventListener('click', (e) => {
-            const btn = e.target.closest('.btn-claim-donation');
-            if (btn) {
-                const id = btn.getAttribute('data-id');
-                const name = btn.getAttribute('data-name');
+            const claimBtn = e.target.closest('.btn-claim-donation');
+            if (claimBtn) {
+                const id = claimBtn.getAttribute('data-id');
+                const name = claimBtn.getAttribute('data-name');
                 if (id && name) {
                     claimDonationFromPage(id, name);
+                }
+                return;
+            }
+
+            const deleteBtn = e.target.closest('.btn-delete-donation');
+            if (deleteBtn) {
+                const id = deleteBtn.getAttribute('data-id');
+                const name = deleteBtn.getAttribute('data-name');
+                if (id && name) {
+                    deleteDonationFromPage(id, name);
                 }
             }
         });
@@ -30,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function getUserRole() {
     try {
-        const user = JSON.parse(localStorage.getItem('replate_user') || localStorage.getItem('user'));
+        const user = JSON.parse(localStorage.getItem('replate_user') || localStorage.getItem('user') || '{}');
         return (user?.role || user?.user_type || 'recipient').toLowerCase();
     } catch (e) {
         return 'recipient';
@@ -136,6 +146,14 @@ function renderDonationListings(items, container, role) {
 
         if (role === 'recipient' && statusLower === 'available') {
             actionCell = `<button class="btn-primary btn-claim-donation" style="padding: 6px 12px; font-size: 0.8rem;" data-id="${donationId}" data-name="${foodNameEscaped}">Claim</button>`;
+        } else if ((role === 'donor' || role === 'admin') && statusLower === 'available') {
+            actionCell = `
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span class="status-badge ${statusLower}">${escapeHTML(status)}</span>
+                    <button class="btn-secondary btn-delete-donation" style="padding: 4px 8px; font-size: 0.75rem; color: #ef4444; border-color: #fca5a5;" data-id="${donationId}" data-name="${foodNameEscaped}">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </div>`;
         }
 
         html += `
@@ -236,6 +254,43 @@ async function claimDonationFromPage(donationId, foodName) {
     }
 }
 
+async function deleteDonationFromPage(donationId, foodName) {
+    if (!donationId) {
+        showToastMessage('Invalid donation identifier.', 'error');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to remove listing "${foodName}"?`)) return;
+
+    try {
+        let res = await fetch('/api/donations.php', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ donation_id: donationId })
+        });
+
+        if (!res.ok && res.status === 404) {
+            res = await fetch('/api/donations', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ donation_id: donationId })
+            });
+        }
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            showToastMessage('Donation listing removed successfully.', 'success');
+            window.dispatchEvent(new Event('replate_notifications_updated'));
+            loadDonations();
+        } else {
+            showToastMessage(data.error || 'Failed to remove donation listing.', 'error');
+        }
+    } catch (err) {
+        showToastMessage('Server error while deleting item.', 'error');
+    }
+}
+
 function parseLocalDate(dateString) {
     if (!dateString) return 'N/A';
     const parts = dateString.split(' ')[0].split('-');
@@ -243,7 +298,9 @@ function parseLocalDate(dateString) {
         const year = parseInt(parts[0], 10);
         const month = parseInt(parts[1], 10) - 1;
         const day = parseInt(parts[2], 10);
-        return new Date(year, month, day).toLocaleDateString();
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+            return new Date(year, month, day).toLocaleDateString();
+        }
     }
     return new Date(dateString).toLocaleDateString();
 }

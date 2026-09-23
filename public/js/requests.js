@@ -73,7 +73,8 @@ function renderIncomingRequests(requests, container) {
 
     requests.forEach(req => {
         const requestId = req.request_id || req.id;
-        const status = (req.status || 'pending').toLowerCase();
+        const rawStatus = req.status || 'pending';
+        const status = rawStatus.toLowerCase();
         const isPending = status === 'pending';
         const foodName = escapeHTML(req.food_name || 'Food Item');
         const recipientName = escapeHTML(req.recipient_name || req.user_name || 'Anonymous User');
@@ -81,22 +82,33 @@ function renderIncomingRequests(requests, container) {
         const quantity = escapeHTML(`${req.quantity_requested || req.quantity || '1'}`);
 
         const actionButtons = isPending ? `
-            <button class="btn-success" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="handleRequestAction(${requestId}, 'approve')">Approve</button>
-            <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="handleRequestAction(${requestId}, 'reject')">Reject</button>
-        ` : `<span class="status-badge ${status}">${escapeHTML(req.status)}</span>`;
+            <button class="btn-success action-btn" data-action="approve" data-id="${requestId}" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;">Approve</button>
+            <button class="btn-danger action-btn" data-action="reject" data-id="${requestId}" style="padding: 4px 8px; font-size: 0.8rem;">Reject</button>
+        ` : `<span class="status-badge ${status}">${escapeHTML(rawStatus)}</span>`;
 
         html += `
             <tr>
                 <td><strong>${foodName}</strong></td>
                 <td>${recipientName} ${recipientEmail ? `(${recipientEmail})` : ''}</td>
                 <td>${quantity}</td>
-                <td><span class="status-badge ${status}">${escapeHTML(req.status)}</span></td>
+                <td><span class="status-badge ${status}">${escapeHTML(rawStatus)}</span></td>
                 <td>${actionButtons}</td>
             </tr>`;
     });
 
     html += `</tbody></table></div>`;
     container.innerHTML = html;
+
+    container.onclick = (e) => {
+        const btn = e.target.closest('.action-btn');
+        if (btn) {
+            const requestId = btn.getAttribute('data-id');
+            const action = btn.getAttribute('data-action');
+            if (requestId && action) {
+                handleRequestAction(requestId, action, btn);
+            }
+        }
+    };
 }
 
 function renderMyRequests(requests, container) {
@@ -125,14 +137,15 @@ function renderMyRequests(requests, container) {
         const foodName = escapeHTML(req.food_name || 'Food Item');
         const donorName = escapeHTML(req.donor_name || req.organization_name || 'Community Donor');
         const location = escapeHTML(req.pickup_location || 'N/A');
-        const statusClass = escapeHTML((req.status || 'pending').toLowerCase());
+        const rawStatus = req.status || 'pending';
+        const statusClass = escapeHTML(rawStatus.toLowerCase());
 
         html += `
             <tr>
                 <td><strong>${foodName}</strong></td>
                 <td>${donorName}</td>
                 <td>${location}</td>
-                <td><span class="status-badge ${statusClass}">${escapeHTML(req.status)}</span></td>
+                <td><span class="status-badge ${statusClass}">${escapeHTML(rawStatus)}</span></td>
             </tr>`;
     });
 
@@ -140,13 +153,18 @@ function renderMyRequests(requests, container) {
     container.innerHTML = html;
 }
 
-async function handleRequestAction(requestId, action) {
+async function handleRequestAction(requestId, action, triggerBtn = null) {
     if (!requestId) {
         showToastMessage('Invalid request identifier.', 'error');
         return;
     }
 
     if (!confirm(`Are you sure you want to ${action} this request?`)) return;
+
+    if (triggerBtn) {
+        triggerBtn.disabled = true;
+        triggerBtn.style.opacity = '0.6';
+    }
 
     try {
         let res = await fetch('/api/requests.php', {
@@ -171,9 +189,17 @@ async function handleRequestAction(requestId, action) {
             loadRequests();
         } else {
             showToastMessage(data.error || `Failed to ${action} request`, 'error');
+            if (triggerBtn) {
+                triggerBtn.disabled = false;
+                triggerBtn.style.opacity = '1.0';
+            }
         }
     } catch (err) {
         showToastMessage(`Server error processing request`, 'error');
+        if (triggerBtn) {
+            triggerBtn.disabled = false;
+            triggerBtn.style.opacity = '1.0';
+        }
     }
 }
 
