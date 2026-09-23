@@ -8,16 +8,24 @@ RePlate is an enterprise-grade, web-based platform built to bridge the gap betwe
 
 RePlate is structured around a decoupled, modular RESTful API architecture running on PHP 8.2+ and MySQL/MariaDB 10.4+. The system isolates public entry points, enforcement wrappers, and configuration files to enforce the principle of least privilege.
 
+---
+
+## System Architectural Overview
+
+RePlate is structured around a decoupled, modular RESTful API architecture running on PHP 8.2+ and MySQL/MariaDB 10.4+. The system isolates public entry points, enforcement wrappers, and configuration files to enforce the principle of least privilege.
+
 replate/
 ├── config/
 │   ├── db.php                     # Database connection wrapper (PDO, ignored by Git)
 │   ├── db.php.example             # Database configuration template for deployment
+│   ├── init.php                   # Session & global initialization bootstrapping
 │   ├── mail.php                   # Socket-based SMTP mail driver (ignored by Git)
 │   ├── mail.php.example           # SMTP mail configuration template
 │   └── Security.php               # Security header applier & rate-limiting engine
 ├── public/
 │   ├── index.php                  # Primary API gateway and routing handler
 │   ├── .htaccess                  # Apache rewrite rules for clean URL routing
+│   ├── favicon.ico                # Site icon resource
 │   ├── api/
 │   │   ├── activity.php           # User activity metrics & log retrieval
 │   │   ├── admin.php              # System administration & user/donation management
@@ -31,7 +39,7 @@ replate/
 │   │   └── users.php              # User authentication, registration, session management
 │   ├── css/                       # Modular UI stylesheets
 │   ├── js/                        # Frontend controllers & AJAX handlers
-│   ├── uploads/                   # Secure image upload target directory
+│   │   └── ui.js                  # Shared UI components & dynamic rendering
 │   ├── activity.html              # User activity log dashboard
 │   ├── admin-dashboard.html       # Administrative control center
 │   ├── dashboard.html             # User portal dashboard
@@ -39,14 +47,15 @@ replate/
 │   ├── index.html                 # Platform landing page
 │   ├── login.html                 # Authentication interface
 │   ├── register.html              # Registration page
-│   ├── requests.html             # Request management interface
-│   └── settings.html             # User preferences & profile settings
+│   ├── requests.html              # Request management interface
+│   └── settings.html              # User preferences & profile settings
 ├── sql/
-│   ├── schema.sql                 # Primary DDL database creation script
-│   └── replate_dump.sql           # Database seed data dump
+│   └── schema.sql                 # Primary DDL database creation script
 ├── .gitignore                     # Git exclusion specifications
 ├── Dockerfile                     # Apache/PHP container definition
-└── README.md                      # Project documentation
+├── README.md                      # Project documentation
+├── replate_dump.sql               # Production database seed data dump
+└── router.php                     # Local development PHP built-in server router
 
 
 ---
@@ -55,32 +64,46 @@ replate/
 
 The MySQL database schema (`replate`) consists of six relational tables configured with strict foreign key constraints, indexes, and automatic transaction locks.
 
+```mermaid
+erDiagram
+    users ||--|| user_settings : "1:1"
+    users ||--o{ food_donations : "1:N (donor)"
+    users ||--o{ notifications : "1:N"
+    users ||--o{ audit_logs : "1:N"
+    food_donations ||--o{ donation_requests : "1:N"
+    users ||--o{ donation_requests : "1:N (recipient)"
+```
 
-+------------------+         +-----------------------+         +------------------------+
-|      users       |         |     food_donations    |         |   donation_requests    |
-+------------------+         +-----------------------+         +------------------------+
-| PK user_id       |<--------| PK donation_id        |<--------| PK request_id          |
-|    name          | (1:N)   | FK donor_id           | (1:N)   | FK donation_id         |
-|    org_name      |         |    food_name          |         | FK recipient_id (users)|
-|    email         |         |    quantity           |         |    quantity_requested  |
-|    password_hash |         |    pickup_location    |         |    status              |
-|    role          |         |    status             |         |    created_at          |
-|    status        |         |    created_at         |         +------------------------+
-+------------------+         +-----------------------+
-|                                |
-| (1:1)                          | (1:N)
-v                                v
-+------------------+         +-----------------------+         +------------------------+
-|  user_settings   |         |     notifications     |         |       audit_logs       |
-+------------------+         +-----------------------+         +------------------------+
-| PK user_id       |         | PK id                 |         | PK log_id              |
-|    discretion    |         | FK user_id            |         | FK user_id             |
-+------------------+         |    title              |         |    event_type          |
-|    message            |         |    action_details      |
-|    is_read            |         |    ip_address          |
-+-----------------------+         +------------------------+
+<details>
+<summary>Click to view plain-text (ASCII) diagram</summary>
 
+```text
++-------------------+         +-------------------+         +-------------------+
+|       users       |         |   food_donations  |         | donation_requests |
++-------------------+         +-------------------+         +-------------------+
+| PK user_id        |<--------| PK donation_id    |<--------| PK request_id     |
+|    name           | (1:N)   | FK donor_id       | (1:N)   | FK donation_id    |
+|    org_name       |         |    food_name      |         | FK recipient_id (users)|
+|    email          |         |    quantity       |         |    quantity_requested |
+|    password_hash  |         |    pickup_location|         |    status         |
+|    role           |         |    status         |         |    created_at     |
+|    status         |         |    created_at     |         +-------------------+
++-------------------+         +-------------------+
+  |                             |
+  | (1:1)                       | (1:N)
+  v                             v
++-------------------+         +-------------------+         +-------------------+
+|   user_settings   |         |   notifications   |         |     audit_logs    |
++-------------------+         +-------------------+         +-------------------+
+| PK user_id        |         | PK id             |         | PK log_id         |
+|    discretion     |         | FK user_id        |         | FK user_id        |
++-------------------+         |    title          |         |    event_type     |
+|    message        |         |    action_details |         |                   |
+|    is_read        |         |    ip_address     |         |                   |
++-------------------+         +-------------------+         +-------------------+
+```
 
+</details>
 
 ### Table Definitions
 
@@ -211,15 +234,15 @@ RePlate incorporates multi-layered application security headers, connection isol
      * Notification actions: 30 calls / 60 seconds
 
 4. **HTTP Security Headers**:
-X-Frame-Options: DENY
-X-Content-Type-Options: nosniff
-X-XSS-Protection: 1; mode=block
-Referrer-Policy: strict-origin-when-cross-origin
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
-
+   ```http
+   X-Frame-Options: DENY
+   X-Content-Type-Options: nosniff
+   X-XSS-Protection: 1; mode=block
+   Referrer-Policy: strict-origin-when-cross-origin
+   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
 
 5. **Credential Protection**:
-* Passwords are hashed using `PASSWORD_BCRYPT` with auto-managed salt rounds. Session cookies are configured with `HttpOnly`, `SameSite=Lax`, and `Secure` (in HTTPS environments).
+    * Passwords are hashed using `PASSWORD_BCRYPT` with auto-managed salt rounds. Session cookies are configured with `HttpOnly`, `SameSite=Lax`, and `Secure` (in HTTPS environments).
 
 ---
 
@@ -236,64 +259,62 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; 
 
 1. **Clone the Repository**:
 ```bash
-git clone [https://github.com/BrianKimani06/replate.git](https://github.com/BrianKimani06/replate.git)
+git clone (https://github.com/mahneeofficial/replate.git)
 cd replate
 
 
-1. Database Initialization:
+1. **Database Initialization:**
+   * Create a MySQL database named `replate`.
+   * Import the SQL schema and seed data:
+     ```bash
+     mysql -u root -p replate < sql/schema.sql
+     mysql -u root -p replate < sql/replate_dump.sql
+     ```
 
-    ○ Create a MySQL database named replate.
-    ○ Import the SQL schema and seed data:
-
-    mysql -u root -p replate < sql/schema.sql
-    mysql -u root -p replate < sql/replate_dump.sql
-
-
-2. Configure Local Environment Files:
-
-    ○ Copy environment configuration templates to active configurations:
-
-    cp config/db.php.example config/db.php
-    cp config/mail.php.example config/mail.php
-
-
-    ○ Open config/db.php and set your database connection parameters:
-    $host = '127.0.0.1';
-    $db   = 'replate';
-    $user = 'root';
-    $pass = 'YOUR_LOCAL_MYSQL_PASSWORD'; // Set your local DB password here
-
-
-    ○ Open config/mail.php and set your Gmail SMTP App Password for automated emails:
-
-    define('MAIL_USER', 'your-email@gmail.com');
-    define('MAIL_PASS', 'your-16-character-app-password');
+2. **Configure Local Environment Files:**
+   * Copy environment configuration templates to active configurations:
+     ```bash
+     cp config/db.php.example config/db.php
+     cp config/mail.php.example config/mail.php
+     ```
+   * Open `config/db.php` and set your database connection parameters:
+     ```php
+     $host = '127.0.0.1';
+     $db   = 'replate';
+     $user = 'root';
+     $pass = 'YOUR_LOCAL_MYSQL_PASSWORD'; // Set your local DB password here
+     ```
+   * Open `config/mail.php` and set your Gmail SMTP App Password for automated emails:
+     ```php
+     define('MAIL_USER', 'your-email@gmail.com');
+     define('MAIL_PASS', 'your-16-character-app-password');
+     ```
 
 
-3. Web Server Setup:
+3. **Web Server Setup**:
+   * Point your web server document root to the `replate/public/` directory.
+   * Verify that Apache has `mod_rewrite` enabled to support standard router behavior via `.htaccess`.
 
-    ○ Point your web server document root to the replate/public/ directory.
-    ○ Verify that Apache has mod_rewrite enabled to support standard router behavior via .htaccess.
+### Containerized Deployment (Docker)
 
-
-Containerized Deployment (Docker)
 To deploy RePlate using Docker:
 
-1. Build Container Image:
-    docker build -t replate-app .
+1. **Build Container Image**:
+   ```bash
+   docker build -t replate-app .
 
-2. Execute Docker Container:
-    docker run -d -p 8080:80 \
-  -e DB_HOST=host.docker.internal \
-  -e DB_NAME=replate \
-  -e DB_USER=root \
-  -e DB_PASS=YOUR_LOCAL_MYSQL_PASSWORD \
-  --name replate_container replate-app
+2. **Execute Docker Container:**
+   ```bash
+   docker run -d -p 8080:80 \
+     -e DB_HOST=host.docker.internal \
+     -e DB_NAME=replate \
+     -e DB_USER=root \
+     -e DB_PASS=YOUR_LOCAL_MYSQL_PASSWORD \
+     --name replate_container replate-app
 
 
-3. Access Platform Interface:
-
-    ○ Navigate to http://localhost:8080 in your web browser.
+3. **Access Platform Interface:**
+   * Navigate to `http://localhost:8080` in your web browser.
 
 
 ### Error & System Logging Reference
@@ -310,32 +331,23 @@ To deploy RePlate using Docker:
 | `ERR_VAL_01` | Validation | Missing required payload parameters or input validation check failed. |
 
 
-Maintenance & Testing Commands
+## Maintenance & Testing Commands
+
 To run sanity checks and clear local cache:
 
+```bash
 # Check PHP Syntax across all endpoint scripts
 find public/api/ -name "*.php" -exec php -l {} \;
 
 # Check active database logs
 tail -n 100 /var/log/apache2/error.log
 
-License & Project Attribution
+```
+
+## License & Project Attribution
 Designed and built for the RePlate Food Redistribution Project. Distributed under the MIT License.
 
----
 
-### Final Steps to Push to GitHub
+## Author
 
-Run these terminal commands from your project root (`/Development/replate`):
-
-```bash
-# 1. Stage all project files including the new README.md
-git add .
-
-# 2. Commit the updates
-git commit -m "docs: add full production README.md and finalize security configurations"
-
-# 3. Push to your repository
-git push origin main
-
-
+* **Brian Kimani** - [@mahneeofficial](https://github.com/mahneeofficial)
