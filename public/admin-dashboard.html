@@ -67,14 +67,14 @@
         <!-- 2. User Moderation Panel -->
         <section id="users" class="tab-panel">
             <h2>User Moderation & Account Approvals</h2>
-            <p class="section-desc">Verify Donors and Recipients, manage roles, and suspend/approve accounts.</p>
+            <p class="section-desc">Verify Donors and Recipients, manage roles (Admin/Donor/Recipient), and suspend/approve accounts.</p>
 
             <table class="data-table">
                 <thead>
-                    <tr><th>User / Business</th><th>Role</th><th>Status</th><th>Verification</th><th>Actions</th></tr>
+                    <tr><th>User / Business</th><th>Email</th><th>Role</th><th>Status</th><th>Verification</th><th>Actions</th></tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</td></tr>
+                    <tr><td colspan="6" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</td></tr>
                 </tbody>
             </table>
         </section>
@@ -194,7 +194,20 @@
         </section>
     </main>
 
-    <!-- Admin Moderation Modal -->
+    <!-- Full User Profile Details Modal -->
+    <div id="userDetailsModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3>User Profile & Account Details</h3>
+            <div id="userDetailsBody" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <!-- Dynamically populated via admin.js -->
+            </div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="closeUserDetailsBtn" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Moderation Confirmation Modal -->
     <div id="adminActionModal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 id="modalTitle">Confirm Action</h3>

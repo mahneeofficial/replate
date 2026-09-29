@@ -3,6 +3,8 @@
  * File: public/js/admin.js
  */
 
+window.adminUsersList = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     initAdminSession();
     setupEventListeners();
@@ -43,13 +45,19 @@ function setupEventListeners() {
         addCategoryForm.addEventListener('submit', handleAddCategorySubmit);
     }
 
+    // User Details Modal Triggers
+    const closeUserDetailsBtn = document.getElementById('closeUserDetailsBtn');
+    if (closeUserDetailsBtn) {
+        closeUserDetailsBtn.addEventListener('click', () => toggleModal('userDetailsModal', false));
+    }
+
     // Notification Form
     const notificationForm = document.getElementById('notificationForm');
     if (notificationForm) {
         notificationForm.addEventListener('submit', handleSendNotificationSubmit);
     }
 
-    // Modal Cancel Listener
+    // Confirmation Modal Cancel Listener
     const modalCancelBtn = document.getElementById('modalCancelBtn');
     if (modalCancelBtn) {
         modalCancelBtn.addEventListener('click', () => toggleModal('adminActionModal', false));
@@ -77,10 +85,8 @@ window.onAdminTabSwitch = function (tabId) {
             loadDonationRequests();
             break;
         case 'reports':
-            // Reports tab generates downloads on demand
             break;
         case 'notifications':
-            // Form is ready by default
             break;
         case 'audit':
             loadAuditLogs();
@@ -119,7 +125,7 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
 
-    tbody.innerHTML = `<tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</td></tr>`;
 
     try {
         const res = await fetch('/api/admin?action=users');
@@ -128,13 +134,16 @@ async function loadUsers() {
         if (res.status === 403) return handleUnauthorizedAccess();
 
         if (!data.success || !data.users || data.users.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="table-empty">No registered users found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="table-empty">No registered users found.</td></tr>`;
             return;
         }
+
+        window.adminUsersList = data.users;
 
         tbody.innerHTML = data.users.map(u => {
             const isVerified = parseInt(u.is_verified, 10) === 1;
             const isSuspended = (u.status || '').toLowerCase() === 'suspended';
+            const isAdmin = (u.role || '').toLowerCase() === 'admin';
 
             const verifyBadge = isVerified
                 ? `<span class="badge badge-success"><i class="fa-solid fa-check"></i> Verified</span>`
@@ -144,17 +153,20 @@ async function loadUsers() {
                 ? `<span class="badge badge-danger">Suspended</span>`
                 : `<span class="badge badge-success">Active</span>`;
 
+            const roleBadge = isAdmin
+                ? `<span class="badge badge-primary"><i class="fa-solid fa-shield"></i> Admin</span>`
+                : `<span class="badge badge-role">${escapeHTML(u.role || 'User')}</span>`;
+
             return `
                 <tr>
-                    <td>
-                        <strong>${escapeHTML(u.name || 'N/A')}</strong><br>
-                        <small class="text-muted">${escapeHTML(u.email || '')}</small>
-                    </td>
-                    <td><span class="badge badge-role">${escapeHTML(u.role || 'User')}</span></td>
+                    <td><strong>${escapeHTML(u.name || u.business_name || 'N/A')}</strong></td>
+                    <td><small class="text-muted">${escapeHTML(u.email || 'N/A')}</small></td>
+                    <td>${roleBadge}</td>
                     <td>${statusBadge}</td>
                     <td>${verifyBadge}</td>
                     <td>
                         <div class="action-buttons">
+                            <button class="btn-sm btn-outline-primary" onclick="viewUserDetails(${u.user_id})"><i class="fa-solid fa-eye"></i> Details</button>
                             ${isVerified
                                 ? `<button class="btn-sm btn-outline-danger" onclick="confirmUserVerification(${u.user_id}, 0)">Unverify</button>`
                                 : `<button class="btn-sm btn-outline-success" onclick="confirmUserVerification(${u.user_id}, 1)">Verify</button>`
@@ -163,6 +175,10 @@ async function loadUsers() {
                                 ? `<button class="btn-sm btn-success" onclick="confirmUserStatus(${u.user_id}, 'Active')">Approve</button>`
                                 : `<button class="btn-sm btn-danger" onclick="confirmUserStatus(${u.user_id}, 'Suspended')">Suspend</button>`
                             }
+                            ${isAdmin
+                                ? `<button class="btn-sm btn-warning" onclick="confirmAdminRoleToggle(${u.user_id}, 'donor')">Revoke Admin</button>`
+                                : `<button class="btn-sm btn-info" onclick="confirmAdminRoleToggle(${u.user_id}, 'admin')">Make Admin</button>`
+                            }
                         </div>
                     </td>
                 </tr>
@@ -170,8 +186,29 @@ async function loadUsers() {
         }).join('');
     } catch (err) {
         console.error('Failed to load users:', err);
-        tbody.innerHTML = `<tr><td colspan="5" class="table-empty text-danger">Failed to load user records.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="table-empty text-danger">Failed to load user records.</td></tr>`;
     }
+}
+
+function viewUserDetails(userId) {
+    const user = (window.adminUsersList || []).find(u => u.user_id == userId);
+    const modalBody = document.getElementById('userDetailsBody');
+    if (!user || !modalBody) return;
+
+    modalBody.innerHTML = `
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>User ID:</strong> #${user.user_id}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Full Name:</strong> ${escapeHTML(user.name || 'N/A')}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Business / Organization:</strong> ${escapeHTML(user.business_name || 'N/A')}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Email:</strong> ${escapeHTML(user.email || 'N/A')}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Phone Number:</strong> ${escapeHTML(user.phone || 'N/A')}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Role:</strong> ${escapeHTML(user.role || 'User')}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Account Status:</strong> ${escapeHTML(user.status || 'Active')}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Verification Status:</strong> ${parseInt(user.is_verified, 10) === 1 ? 'Verified' : 'Unverified'}</div>
+        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Address / Location:</strong> ${escapeHTML(user.address || 'N/A')}</div>
+        <div style="padding: 8px 0;"><strong>Registration Date:</strong> ${formatDate(user.created_at)}</div>
+    `;
+
+    toggleModal('userDetailsModal', true);
 }
 
 function confirmUserVerification(userId, verifyStatus) {
@@ -220,6 +257,32 @@ function confirmUserStatus(userId, status) {
                 }
             } catch (err) {
                 showToast('Network error updating user status.', 'danger');
+            }
+        }
+    );
+}
+
+function confirmAdminRoleToggle(userId, newRole) {
+    const actionText = newRole === 'admin' ? 'grant Admin rights to' : 'revoke Admin rights from';
+    showConfirmModal(
+        'Confirm Role Change',
+        `Are you sure you want to ${actionText} user ID #${userId}?`,
+        async () => {
+            try {
+                const res = await fetch('/api/admin?action=update_user_role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, role: newRole })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || 'User role updated successfully.', 'success');
+                    loadUsers();
+                } else {
+                    showToast(data.error || 'Failed to update user role.', 'danger');
+                }
+            } catch (err) {
+                showToast('Network error updating user role.', 'danger');
             }
         }
     );
@@ -456,7 +519,6 @@ window.exportReport = async function (type) {
             return;
         }
 
-        // Convert JSON array to CSV format
         const headers = Object.keys(dataset[0]);
         const csvRows = [headers.join(',')];
 
@@ -582,7 +644,6 @@ function showConfirmModal(title, description, onConfirmCallback) {
     if (modalDesc) modalDesc.textContent = description;
 
     if (confirmBtn) {
-        // Clone button to strip existing single-click handlers
         const newConfirmBtn = confirmBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
 

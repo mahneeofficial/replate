@@ -2,6 +2,15 @@
 declare(strict_types=1);
 
 if (session_status() === PHP_SESSION_NONE) {
+    $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isSecure,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
@@ -15,7 +24,13 @@ set_exception_handler(function (Throwable $e) {
     exit;
 });
 
-header("Access-Control-Allow-Origin: *");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin !== '') {
+    header("Access-Control-Allow-Origin: {$origin}");
+    header("Access-Control-Allow-Credentials: true");
+} else {
+    header("Access-Control-Allow-Origin: *");
+}
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
@@ -79,6 +94,61 @@ function createSystemNotification(PDO $pdo, int $userId, string $title, string $
     }
 }
 
+/**
+ * Validate remember-me cookie and restore session if valid
+ */
+function checkRememberCookie(PDO $pdo): void {
+    if (!empty($_SESSION['user_id']) || !empty($_SESSION['user']['id'])) {
+        return;
+    }
+
+    if (empty($_COOKIE['replate_remember'])) {
+        return;
+    }
+
+    $parts = explode(':', $_COOKIE['replate_remember']);
+    if (count($parts) !== 2) {
+        return;
+    }
+
+    [$selector, $validator] = $parts;
+
+    try {
+        $stmt = $pdo->prepare("
+            SELECT t.user_id, t.hashed_validator, u.name, u.org_name, u.email, u.role, u.status,
+                   COALESCE(u.verification_status, 'Pending') AS verification_status
+            FROM auth_tokens t
+            JOIN users u ON u.user_id = t.user_id
+            WHERE t.selector = ? AND t.expires_at > NOW()
+            LIMIT 1
+        ");
+        $stmt->execute([$selector]);
+        $token = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($token && hash_equals($token['hashed_validator'], hash('sha256', $validator))) {
+            if (isset($token['status']) && strtolower((string)$token['status']) === 'suspended') {
+                return;
+            }
+
+            session_regenerate_id(true);
+            $normalizedRole = strtolower(trim((string)$token['role']));
+            $_SESSION['user_id'] = $token['user_id'];
+            $_SESSION['role'] = $normalizedRole;
+            $_SESSION['name'] = $token['name'];
+            $_SESSION['user'] = [
+                'id' => $token['user_id'],
+                'user_id' => $token['user_id'],
+                'name' => $token['name'],
+                'email' => $token['email'],
+                'role' => $normalizedRole,
+                'verification_status' => $token['verification_status']
+            ];
+        }
+    } catch (Throwable $e) {
+        error_log("Error in checkRememberCookie: " . $e->getMessage());
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
@@ -128,6 +198,8 @@ if ($method === 'POST') {
 }
 
 function handleGetCurrentUser(PDO $pdo): void {
+    checkRememberCookie($pdo);
+
     $userId = $_SESSION['user_id'] ?? $_SESSION['user']['id'] ?? $_SESSION['user']['user_id'] ?? null;
 
     if (!$userId) {
@@ -148,6 +220,11 @@ function handleGetCurrentUser(PDO $pdo): void {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user) {
+            $user['role'] = strtolower(trim((string)$user['role']));
+            $_SESSION['role'] = $user['role'];
+            if (isset($_SESSION['user'])) {
+                $_SESSION['user']['role'] = $user['role'];
+            }
             echo json_encode(["success" => true, "user" => $user]);
         } else {
             http_response_code(404);
@@ -224,7 +301,6 @@ function handleRegister(PDO $pdo, array $data): void {
         $stmtSettings = $pdo->prepare("INSERT INTO user_settings (user_id) VALUES (?)");
         $stmtSettings->execute([$userId]);
 
-        // Create Welcome Notification
         createSystemNotification(
             $pdo,
             $userId,
@@ -304,6 +380,8 @@ function handleLogin(PDO $pdo, array $data): void {
             return;
         }
 
+        $user['role'] = strtolower(trim((string)$user['role']));
+
         if ($remember) {
             try {
                 $selector = bin2hex(random_bytes(16));
@@ -344,7 +422,6 @@ function handleLogin(PDO $pdo, array $data): void {
             'verification_status' => $user['verification_status']
         ];
 
-        // Create Security/Login Notification
         createSystemNotification(
             $pdo,
             (int)$user['user_id'],

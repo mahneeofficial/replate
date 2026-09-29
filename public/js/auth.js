@@ -1,6 +1,6 @@
 /**
  * RePlate Authentication Engine
- * Location: public/js/auth.js
+ * Location: public/assets/js/auth.js
  */
 
 const AuthEngine = {
@@ -49,14 +49,12 @@ const AuthEngine = {
 
         if (typeof errStr !== 'string') return 'An unexpected error occurred.';
 
-        // 1. Check direct error code matches first
         for (const [code, userMessage] of Object.entries(this.errorDictionary)) {
             if (errStr.includes(code)) {
                 return userMessage;
             }
         }
 
-        // 2. Fall back to custom string message if separated by colon
         if (errStr.includes(':')) {
             const customMessage = errStr.split(':').slice(1).join(':').trim();
             if (customMessage) return customMessage;
@@ -137,10 +135,17 @@ const AuthEngine = {
 
             if (data.user) {
                 localStorage.setItem('replate_user', JSON.stringify(data.user));
+                localStorage.setItem('user', JSON.stringify(data.user));
             }
 
             setTimeout(() => {
-                const redirectUrl = data.user && data.user.role === 'admin' ? '/admin-dashboard' : '/dashboard';
+                let redirectUrl = '/dashboard';
+                if (data.user && data.user.role) {
+                    const role = String(data.user.role).toLowerCase().trim();
+                    if (role === 'admin') redirectUrl = '/admin-dashboard';
+                    else if (role === 'donor') redirectUrl = '/donor-dashboard';
+                    else if (role === 'recipient') redirectUrl = '/recipient-dashboard';
+                }
                 window.location.href = redirectUrl;
             }, 1200);
 
@@ -157,7 +162,12 @@ const AuthEngine = {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
-            return await this._handleResponse(response);
+            const data = await this._handleResponse(response);
+            if (data && data.user) {
+                localStorage.setItem('replate_user', JSON.stringify(data.user));
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
+            return data;
         } catch (error) {
             return null;
         }

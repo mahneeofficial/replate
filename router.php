@@ -1,21 +1,25 @@
 <?php
 declare(strict_types=1);
 
-$publicDir = realpath(__DIR__ . '/public');
-if ($publicDir === false) {
+$rawPublicDir = realpath(__DIR__ . '/public');
+if ($rawPublicDir === false) {
     http_response_code(500);
     header('Content-Type: application/json; charset=UTF-8');
     echo json_encode(["error" => "ERR_SYS_00: Public directory not found."]);
     exit;
 }
 
+// Normalize directory separators for cross-platform support (Windows vs Linux)
+$publicDir = str_replace('\\', '/', $rawPublicDir);
+
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
 
 // Canonicalize target file path to defeat path traversal attacks (/../)
-$targetFile = realpath($publicDir . $uri);
+$rawTargetFile = realpath($publicDir . $uri);
+$targetFile = $rawTargetFile !== false ? str_replace('\\', '/', $rawTargetFile) : false;
 
-// Verify target file path stays strictly inside /public
-$isInsidePublic = ($targetFile !== false && str_starts_with($targetFile, $publicDir));
+// Verify target file path stays strictly inside /public (case-insensitive for Windows drive letters)
+$isInsidePublic = ($targetFile !== false && str_starts_with(strtolower($targetFile), strtolower($publicDir)));
 
 // 1. Redirect explicit .html requests to clean URLs
 if (pathinfo($uri, PATHINFO_EXTENSION) === 'html') {
@@ -59,28 +63,37 @@ if ($uri === '/favicon.ico') {
 }
 
 // 5. Clean HTML route mapping (e.g., /register -> public/register.html)
-$cleanHtmlPath = realpath($publicDir . $uri . '.html');
-if ($cleanHtmlPath !== false && str_starts_with($cleanHtmlPath, $publicDir) && !is_dir($cleanHtmlPath)) {
-    header('Content-Type: text/html; charset=UTF-8');
-    readfile($cleanHtmlPath);
-    exit;
-}
-
-// 6. Root path / -> serve public/login.html
-if ($uri === '/' || $uri === '') {
-    $loginHtml = realpath($publicDir . '/login.html');
-    if ($loginHtml !== false && str_starts_with($loginHtml, $publicDir)) {
+$rawCleanHtmlPath = realpath($rawPublicDir . $uri . '.html');
+if ($rawCleanHtmlPath !== false) {
+    $cleanHtmlPath = str_replace('\\', '/', $rawCleanHtmlPath);
+    if (str_starts_with(strtolower($cleanHtmlPath), strtolower($publicDir)) && !is_dir($cleanHtmlPath)) {
         header('Content-Type: text/html; charset=UTF-8');
-        readfile($loginHtml);
+        readfile($cleanHtmlPath);
         exit;
     }
 }
 
+// 6. Root path / -> serve public/login.html
+if ($uri === '/' || $uri === '') {
+    $rawLoginHtml = realpath($rawPublicDir . '/login.html');
+    if ($rawLoginHtml !== false) {
+        $loginHtml = str_replace('\\', '/', $rawLoginHtml);
+        if (str_starts_with(strtolower($loginHtml), strtolower($publicDir))) {
+            header('Content-Type: text/html; charset=UTF-8');
+            readfile($loginHtml);
+            exit;
+        }
+    }
+}
+
 // 7. Delegate remaining requests to public/index.php
-$indexFile = realpath($publicDir . '/index.php');
-if ($indexFile !== false && str_starts_with($indexFile, $publicDir)) {
-    require $indexFile;
-    exit;
+$rawIndexFile = realpath($rawPublicDir . '/index.php');
+if ($rawIndexFile !== false) {
+    $indexFile = str_replace('\\', '/', $rawIndexFile);
+    if (str_starts_with(strtolower($indexFile), strtolower($publicDir))) {
+        require $indexFile;
+        exit;
+    }
 }
 
 // 8. 404 Fallback
