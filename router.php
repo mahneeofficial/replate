@@ -28,7 +28,7 @@ if (pathinfo($uri, PATHINFO_EXTENSION) === 'html') {
     exit;
 }
 
-// 2. Serve PHP scripts directly inside /public
+// 2. Serve PHP scripts directly inside /public if explicitly requested (.php)
 if ($isInsidePublic && !is_dir($targetFile) && pathinfo($targetFile, PATHINFO_EXTENSION) === 'php') {
     require $targetFile;
     exit;
@@ -73,7 +73,17 @@ if ($rawCleanHtmlPath !== false) {
     }
 }
 
-// 6. Root path / -> serve public/login.html
+// 6. Clean PHP route mapping (e.g., /api/users -> public/api/users.php)
+$rawCleanPhpPath = realpath($rawPublicDir . $uri . '.php');
+if ($rawCleanPhpPath !== false) {
+    $cleanPhpPath = str_replace('\\', '/', $rawCleanPhpPath);
+    if (str_starts_with(strtolower($cleanPhpPath), strtolower($publicDir)) && !is_dir($cleanPhpPath)) {
+        require $cleanPhpPath;
+        exit;
+    }
+}
+
+// 7. Root path / -> serve public/login.html
 if ($uri === '/' || $uri === '') {
     $rawLoginHtml = realpath($rawPublicDir . '/login.html');
     if ($rawLoginHtml !== false) {
@@ -86,7 +96,7 @@ if ($uri === '/' || $uri === '') {
     }
 }
 
-// 7. Delegate remaining requests to public/index.php
+// 8. Delegate remaining requests to public/index.php
 $rawIndexFile = realpath($rawPublicDir . '/index.php');
 if ($rawIndexFile !== false) {
     $indexFile = str_replace('\\', '/', $rawIndexFile);
@@ -96,7 +106,7 @@ if ($rawIndexFile !== false) {
     }
 }
 
-// 8. 404 Fallback
+// 9. 404 Fallback
 http_response_code(404);
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode(["success" => false, "error" => "ERR_SYS_04: Endpoint or page not found"]);
