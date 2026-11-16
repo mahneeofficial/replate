@@ -41,7 +41,7 @@ const UIEngine = {
             symbols[charBuf[3] % symbols.length]
         ];
 
-        const randomValues = new Uint32Array(length - 4);
+        const randomValues = new Uint32Array(Math.max(0, length - 4));
         window.crypto.getRandomValues(randomValues);
 
         for (let i = 0; i < randomValues.length; i++) {
@@ -69,7 +69,7 @@ const UIEngine = {
 
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        
+
         const icon = type === 'success' ? 'fa-circle-check' :
                      type === 'error' ? 'fa-circle-xmark' :
                      type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info';
@@ -140,6 +140,17 @@ const UIEngine = {
             const role = (user.role || user.user_type || 'recipient').toUpperCase();
             if (nameEl) nameEl.textContent = name;
             if (roleEl) roleEl.textContent = role;
+
+            // Inject Admin Console link if user is an admin
+            if (role === 'ADMIN') {
+                const navMenu = document.querySelector('.nav-menu');
+                if (navMenu && !navMenu.querySelector('a[href="/admin-dashboard"]')) {
+                    const adminLi = document.createElement('li');
+                    adminLi.className = 'nav-item';
+                    adminLi.innerHTML = `<a href="/admin-dashboard"><i class="fa-solid fa-shield-halved"></i> <span>Admin Panel</span></a>`;
+                    navMenu.appendChild(adminLi);
+                }
+            }
         }
 
         const logoutBtn = document.getElementById('logoutBtn');
@@ -149,6 +160,29 @@ const UIEngine = {
                 this.logout();
             };
         }
+
+        this.highlightActiveNav();
+    },
+
+    highlightActiveNav() {
+        const currentPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+        const currentBase = currentPath.split('/').pop().replace('.html', '').replace('.php', '');
+        const navItems = document.querySelectorAll('.nav-menu .nav-item');
+
+        navItems.forEach(item => {
+            const link = item.querySelector('a');
+            if (!link) return;
+
+            const href = link.getAttribute('href') || '';
+            const cleanHref = href.toLowerCase().replace(/\/$/, '');
+            const hrefBase = cleanHref.split('/').pop().replace('.html', '').replace('.php', '');
+
+            if (currentBase === hrefBase && hrefBase !== '') {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
     },
 
     addNotification(title, message, type = 'info') {

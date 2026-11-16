@@ -6,12 +6,17 @@
    ========================================================================== */
 
 :root {
-    --bg-dark: #0b0f19;
+    --bg-dark: #0a0d14;
+    --sidebar-bg: #0f1420;
     --card-bg: #131924;
     --card-border: rgba(255, 255, 255, 0.08);
+    --card-hover-border: rgba(16, 185, 129, 0.3);
     --primary: #10b981;
     --primary-hover: #059669;
     --primary-dark: #064e3b;
+    --primary-glow: rgba(16, 185, 129, 0.2);
+    --cyan: #06b6d4;
+    --indigo: #6366f1;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --input-bg: #1a2232;
@@ -40,14 +45,16 @@ body {
 }
 
 /* Base Form Inputs & Controls */
-.form-group, .form-group-modal {
+.form-group,
+.form-group-modal {
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin-bottom: 16px;
 }
 
-.form-label, .modal-label {
+.form-label,
+.modal-label {
     display: block;
     font-size: 0.82rem;
     font-weight: 600;
@@ -57,7 +64,8 @@ body {
     margin-bottom: 4px;
 }
 
-.form-input, .modal-input,
+.form-input,
+.modal-input,
 input[type="text"],
 input[type="number"],
 input[type="datetime-local"],
@@ -82,13 +90,18 @@ textarea {
     opacity: 1;
 }
 
-.form-input:focus, .modal-input:focus,
-input:focus, select:focus, textarea:focus {
+.form-input:focus,
+.modal-input:focus,
+input:focus,
+select:focus,
+textarea:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
-select.form-input, select.modal-input, select {
+select.form-input,
+select.modal-input,
+select {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -114,7 +127,8 @@ select option {
 .flex-2 { flex: 2; min-width: 0; }
 
 /* Button Component System */
-button, .btn {
+button,
+.btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -130,7 +144,8 @@ button, .btn {
     white-space: nowrap;
 }
 
-button:disabled, .btn:disabled {
+button:disabled,
+.btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -139,11 +154,14 @@ button:disabled, .btn:disabled {
     background-color: var(--primary);
     color: #042f2e;
     border-color: var(--primary);
+    font-weight: 700;
 }
 
 .btn-primary:hover:not(:disabled) {
     background-color: var(--primary-hover);
     color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px var(--primary-glow);
 }
 
 .btn-secondary {
@@ -165,6 +183,11 @@ button:disabled, .btn:disabled {
 
 .btn-danger:hover:not(:disabled) {
     background-color: var(--danger-hover);
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
 }
 
 /* Alert Box Component */
@@ -250,200 +273,17 @@ button:disabled, .btn:disabled {
     }
 }
 
-/* Modal Popup System */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-}
-
-.modal-content {
-    background-color: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
-    width: 100%;
-    max-width: 480px;
-    padding: 28px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-    position: relative;
-    animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes modalPop {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-.modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.modal-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-main);
-}
-
-.close-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 4px;
-}
-
-.close-btn:hover {
-    color: var(--text-main);
-}
-
-/* Authentication Page Styles */
-.bg-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(100px);
-    z-index: 0;
-    pointer-events: none;
-}
-.orb-1 { width: 400px; height: 400px; background: rgba(16, 185, 129, 0.15); top: -100px; left: -100px; }
-.orb-2 { width: 350px; height: 350px; background: rgba(59, 130, 246, 0.15); bottom: -100px; right: -100px; }
-
-.page-wrapper {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 1100px;
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    display: flex;
-    overflow: hidden;
-    min-height: 640px;
-    margin: auto;
-}
-
-.hero-side {
-    flex: 1.1;
-    position: relative;
-    padding: 48px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    overflow: hidden;
-    color: #ffffff;
-}
-
-.slideshow-bg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 1;
-}
-
-.slide {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
-    animation: slideFade 15s infinite ease-in-out;
-}
-
-.slide:nth-child(1) { background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80'); animation-delay: 0s; }
-.slide:nth-child(2) { background-image: url('https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80'); animation-delay: 5s; }
-.slide:nth-child(3) { background-image: url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80'); animation-delay: 10s; }
-
-@keyframes slideFade {
-    0% { opacity: 0; transform: scale(1); }
-    10% { opacity: 1; }
-    33% { opacity: 1; }
-    43% { opacity: 0; transform: scale(1.05); }
-    100% { opacity: 0; }
-}
-
-.hero-overlay {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: linear-gradient(135deg, rgba(6, 78, 59, 0.92) 0%, rgba(16, 185, 129, 0.82) 100%);
-    z-index: 2;
-}
-
-.hero-content { position: relative; z-index: 3; }
-
-.brand-logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #ffffff;
-    text-decoration: none;
-    margin-bottom: 32px;
-}
-
-.form-side {
-    flex: 1;
-    padding: 48px;
-    background: #ffffff;
-    color: #0f172a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.form-side .form-input,
-.form-side select,
-.form-side textarea {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #0f172a;
-}
-
-.form-side ::placeholder {
-    color: #94a3b8;
-}
-
-.form-side select option {
-    background-color: #ffffff;
-    color: #0f172a;
-}
-
 /* Global Helpers */
-.d-none { display: none !important; }
+.d-none,
+.display-none { display: none !important; }
+.margin-0 { margin: 0 !important; }
+.mb-16 { margin-bottom: 16px !important; }
 .text-center { text-align: center; }
 .text-muted { color: var(--text-muted); }
 .text-danger { color: var(--danger); }
 .text-success { color: var(--success); }
 
 @media (max-width: 900px) {
-    .page-wrapper {
-        flex-direction: column;
-        border-radius: 0;
-        min-height: 100vh;
-    }
-    
-    .hero-side {
-        display: none;
-    }
-    
-    .form-side {
-        padding: 28px 20px;
-    }
-
     .form-row {
         flex-direction: column;
         gap: 12px;

@@ -1,0 +1,156 @@
+/* ==========================================================================
+   RePlate — Authentication & Landing Split Layout
+   File: public/css/auth.css
+   ========================================================================== */
+
+.bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(16, 185, 129, 0.15);
+    top: -100px;
+    left: -100px;
+}
+
+.orb-2 {
+    width: 350px;
+    height: 350px;
+    background: rgba(59, 130, 246, 0.15);
+    bottom: -100px;
+    right: -100px;
+}
+
+.page-wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1100px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    overflow: hidden;
+    min-height: 640px;
+    margin: auto;
+}
+
+.hero-side {
+    flex: 1.1;
+    position: relative;
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    color: #ffffff;
+}
+
+.slideshow-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    animation: slideFade 15s infinite ease-in-out;
+}
+
+.slide:nth-child(1) { background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80'); animation-delay: 0s; }
+.slide:nth-child(2) { background-image: url('https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80'); animation-delay: 5s; }
+.slide:nth-child(3) { background-image: url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80'); animation-delay: 10s; }
+
+@keyframes slideFade {
+    0% { opacity: 0; transform: scale(1); }
+    10% { opacity: 1; }
+    33% { opacity: 1; }
+    43% { opacity: 0; transform: scale(1.05); }
+    100% { opacity: 0; }
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.92) 0%, rgba(16, 185, 129, 0.82) 100%);
+    z-index: 2;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 3;
+}
+
+.hero-side .brand-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-decoration: none;
+    margin-bottom: 32px;
+    padding: 0;
+}
+
+.form-side {
+    flex: 1;
+    padding: 48px;
+    background: #ffffff;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-side .form-input,
+.form-side select,
+.form-side textarea {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.form-side ::placeholder {
+    color: #94a3b8;
+}
+
+.form-side select option {
+    background-color: #ffffff;
+    color: #0f172a;
+}
+
+@media (max-width: 900px) {
+    .page-wrapper {
+        flex-direction: column;
+        border-radius: 0;
+        min-height: 100vh;
+    }
+
+    .hero-side {
+        display: none;
+    }
+
+    .form-side {
+        padding: 28px 20px;
+    }
+}

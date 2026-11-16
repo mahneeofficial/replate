@@ -8,7 +8,9 @@
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/modals.css">
     <link rel="stylesheet" href="/css/notifications.css">
 </head>
 <body>
@@ -17,7 +19,7 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <div class="app-container">
-    <!-- Sidebar Navigation -->
+    <!-- Unified Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-top">
             <a href="/dashboard" class="brand-logo">
@@ -30,6 +32,9 @@
                 </li>
                 <li class="nav-item">
                     <a href="/donations"><i class="fa-solid fa-box-archive"></i> <span>Food Donations</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="/requests"><i class="fa-solid fa-hand-holding-heart"></i> <span>Requests & Claims</span></a>
                 </li>
                 <li class="nav-item">
                     <a href="/activity"><i class="fa-solid fa-clock-rotate-left"></i> <span>Activity Log</span></a>
@@ -72,7 +77,7 @@
             <div class="metric-card cyan">
                 <div class="metric-icon"><i class="fa-solid fa-bowl-food"></i></div>
                 <div class="metric-body">
-                    <span class="metric-title">Total Claims / Posts</span>
+                    <span class="metric-title" id="metricTotalLabel">Total Claims / Posts</span>
                     <h2 id="metricTotal">0</h2>
                 </div>
             </div>
@@ -80,7 +85,7 @@
             <div class="metric-card emerald">
                 <div class="metric-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
                 <div class="metric-body">
-                    <span class="metric-title">Active Requests</span>
+                    <span class="metric-title" id="metricActiveLabel">Active Requests</span>
                     <h2 id="metricActive">0</h2>
                 </div>
             </div>
@@ -172,6 +177,12 @@
 
 <script src="/js/ui.js"></script>
 <script src="/js/auth.js"></script>
+<script src="/js/dashboard_modules/dashboard_utils.js"></script>
+<script src="/js/dashboard_modules/dashboard_profile.js"></script>
+<script src="/js/dashboard_modules/dashboard_metrics.js"></script>
+<script src="/js/dashboard_modules/dashboard_donations.js"></script>
+<script src="/js/dashboard_modules/dashboard_notifications.js"></script>
+<script src="/js/dashboard_modules/dashboard_events.js"></script>
 <script src="/js/dashboard.js"></script>
 </body>
 </html>

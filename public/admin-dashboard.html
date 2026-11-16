@@ -8,8 +8,10 @@
     <script>
         (function() {
             try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                if (!user || user.role !== 'admin') {
+                const rawUser = localStorage.getItem('replate_user') || localStorage.getItem('user') || '{}';
+                const user = JSON.parse(rawUser);
+                const role = (user.role || user.user_type || '').toLowerCase().trim();
+                if (!user || role !== 'admin') {
                     window.location.replace('/login');
                 }
             } catch (e) {
@@ -42,6 +44,7 @@
                 <li class="nav-item"><button onclick="switchTab('reports', this)"><i class="fa-solid fa-file-invoice"></i> System Reports</button></li>
                 <li class="nav-item"><button onclick="switchTab('notifications', this)"><i class="fa-solid fa-bell"></i> Notifications</button></li>
                 <li class="nav-item"><button onclick="switchTab('audit', this)"><i class="fa-solid fa-list-check"></i> Audit Logs</button></li>
+                <li class="nav-item"><button onclick="window.location.href='/dashboard'"><i class="fa-solid fa-arrow-left"></i> User Dashboard</button></li>
             </ul>
         </div>
         <div class="admin-user-footer">
@@ -198,9 +201,7 @@
     <div id="userDetailsModal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 600px;">
             <h3>User Profile & Account Details</h3>
-            <div id="userDetailsBody" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-                <!-- Dynamically populated via admin.js -->
-            </div>
+            <div id="userDetailsBody" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;"></div>
             <div class="modal-actions" style="margin-top: 20px;">
                 <button id="closeUserDetailsBtn" class="btn-secondary">Close</button>
             </div>
@@ -240,15 +241,24 @@
         </div>
     </div>
 
-    <!-- Global UI, Auth, and Admin Scripts -->
+    <!-- Global UI, Auth Modules, Admin Modules, and Admin Controller -->
     <script src="/js/ui.js"></script>
+    <script src="/js/auth_modules/auth_engine.js"></script>
+    <script src="/js/auth_modules/auth_forms.js"></script>
+    <script src="/js/auth_modules/auth_forgot.js"></script>
+    <script src="/js/auth_modules/auth_logout.js"></script>
     <script src="/js/auth.js"></script>
+    <script src="/js/admin_modules/admin_helpers.js"></script>
+    <script src="/js/admin_modules/admin_users.js"></script>
+    <script src="/js/admin_modules/admin_categories.js"></script>
+    <script src="/js/admin_modules/admin_listings.js"></script>
+    <script src="/js/admin_modules/admin_reports_audit.js"></script>
     <script src="/js/admin.js"></script>
 
     <script>
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-list button').forEach(b => b.classList.remove('active'));
 
             const targetPanel = document.getElementById(tabId);
             if (targetPanel) {
@@ -264,6 +274,7 @@
         }
 
         document.getElementById('adminLogoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('replate_user');
             localStorage.removeItem('user');
             window.location.href = '/login';
         });

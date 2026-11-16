@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS reports;
 DROP TABLE IF EXISTS donation_requests;
 DROP TABLE IF EXISTS food_donations;
 DROP TABLE IF EXISTS food_categories;
+DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS user_settings;
 DROP TABLE IF EXISTS users;
 
@@ -61,21 +62,19 @@ CREATE TABLE user_settings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Food Categories Table
-CREATE TABLE food_categories (
+CREATE TABLE categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Seed Default Food Categories
-INSERT INTO food_categories (category_id, name, description) VALUES
-(1, 'General Surplus', 'General unparsed surplus food items'),
-(2, 'Prepared Meals', 'Cooked and ready-to-eat meals'),
-(3, 'Fresh Produce', 'Fruits, vegetables, and farm products'),
-(4, 'Bakery Goods', 'Fresh bread, pastries, and baked items'),
-(5, 'Packaged & Canned', 'Non-perishable shelf-stable items')
-ON DUPLICATE KEY UPDATE name=VALUES(name), description=VALUES(description);
+CREATE TABLE food_categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Food Donations Table
 CREATE TABLE food_donations (
