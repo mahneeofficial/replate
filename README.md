@@ -1,18 +1,12 @@
 # RePlate — Food Donation & Redistribution Platform
 
-RePlate is an enterprise-grade, web-based platform built to bridge the gap between commercial/community food donors and food assistance recipients. The system enables real-time donation listing, automated request processing, role-based user management, transaction audit logging, and automated SMTP notifications while strictly guarding user discretion and platform security.
+RePlate is a full-stack, role-based web platform built to connect commercial and community food donors with verified food assistance recipients. The system supports real-time surplus food listing, transaction-locked claim requests, administrative moderation, impact analytics (food weight & $\text{CO}_2$ emissions avoided), audit logging, and free multi-channel alerts (**In-App Activity Alerts**, **WhatsApp Quick Handoff**, and **SMTP Email Confirmations**).
 
 ---
 
 ## System Architectural Overview
 
-RePlate is structured around a decoupled, modular RESTful API architecture running on PHP 8.2+ and MySQL/MariaDB 10.4+. The system isolates public entry points, enforcement wrappers, and configuration files to enforce the principle of least privilege.
-
----
-
-## System Architectural Overview
-
-RePlate is structured around a decoupled, modular RESTful API architecture running on PHP 8.2+ and MySQL/MariaDB 10.4+. The system isolates public entry points, enforcement wrappers, and configuration files to enforce the principle of least privilege.
+RePlate is structured around a decoupled, modular RESTful API architecture running on **PHP 8.2+** and **MySQL / MariaDB 10.4+**. Public entry points, endpoint handler modules, and sensitive configuration files are isolated to enforce clean separation of concerns and the principle of least privilege.
 
 ```text
 replate/
@@ -20,94 +14,171 @@ replate/
 │   ├── db.php                     # Database connection wrapper (PDO, ignored by Git)
 │   ├── db.php.example             # Database configuration template for deployment
 │   ├── init.php                   # Session & global initialization bootstrapping
-│   ├── mail.php                   # Socket-based SMTP mail driver (ignored by Git)
+│   ├── mail.php                   # Socket-based SMTP mail driver with CID logo embedding (ignored by Git)
 │   ├── mail.php.example           # SMTP mail configuration template
-│   └── Security.php               # Security header applier & rate-limiting engine
+│   └── Security.php               # Security headers, input sanitization & rate-limiting engine
 ├── public/
-│   ├── index.php                  # Primary API gateway and routing handler
-│   ├── .htaccess                  # Apache rewrite rules for clean URL routing
+│   ├── index.php                  # Primary API gateway & fallback routing handler
+│   ├── .htaccess                  # Apache/XAMPP rewrite rules for clean URL routing
 │   ├── favicon.ico                # Site icon resource
+│   ├── activity.html              # User activity & audit log viewer
+│   ├── admin-dashboard.html       # Administrative control center
+│   ├── dashboard.html             # Role-aware user workspace dashboard
+│   ├── donations.html             # Food surplus discovery & listing management
+│   ├── index.html                 # Platform entry redirect / landing page
+│   ├── login.html                 # User authentication interface
+│   ├── register.html              # Donor & Recipient registration page
+│   ├── requests.html              # Claim request & WhatsApp handoff management interface
+│   ├── settings.html              # Profile, security & free alert channel preferences
 │   ├── api/
 │   │   ├── activity.php           # User activity metrics & log retrieval
-│   │   ├── admin.php              # System administration & user/donation management
+│   │   ├── admin.php              # Admin API router
 │   │   ├── categories.php         # Food category taxonomy handler
-│   │   ├── donations.php          # CRUD operations for food donation items
-│   │   ├── forgot_password.php    # Self-service OTP password recovery workflow
-│   │   ├── notifications.php      # User notification dispatch & management
-│   │   ├── reports.php            # Analytics, impact metrics, and reporting API
-│   │   ├── requests.php           # Claim request workflow & approval engine
-│   │   ├── settings.php           # User profile and discretion settings API
-│   │   └── users.php              # User authentication, registration, session management
-│   ├── css/                       # Modular UI stylesheets
-│   ├── js/                        # Frontend controllers & AJAX handlers
-│   │   └── ui.js                  # Shared UI components & dynamic rendering
-│   ├── activity.html              # User activity log dashboard
-│   ├── admin-dashboard.html       # Administrative control center
-│   ├── dashboard.html             # User portal dashboard
-│   ├── donations.html             # Donation discovery & management page
-│   ├── index.html                 # Platform landing page
-│   ├── login.html                 # Authentication interface
-│   ├── register.html              # Registration page
-│   ├── requests.html              # Request management interface
-│   └── settings.html              # User preferences & profile settings
+│   │   ├── donations.php          # Food donation router
+│   │   ├── forgot_password.php    # Self-service OTP password recovery router
+│   │   ├── notifications.php      # User in-app notification dispatch & management
+│   │   ├── reports.php            # CSV impact & audit report generator
+│   │   ├── requests.php           # Claim request workflow router
+│   │   ├── settings.php           # User profile, password & alert settings API
+│   │   ├── users.php              # User authentication & session management router
+│   │   ├── admin_handlers/
+│   │   │   ├── add_category.php
+│   │   │   ├── analytics.php
+│   │   │   ├── audit_logs.php
+│   │   │   ├── categories.php
+│   │   │   ├── delete_category.php
+│   │   │   ├── donation_requests.php
+│   │   │   ├── listings.php
+│   │   │   ├── remove_listing.php
+│   │   │   ├── reports.php
+│   │   │   ├── send_notification.php
+│   │   │   ├── update_user_role.php
+│   │   │   ├── update_user_status.php
+│   │   │   ├── users.php
+│   │   │   └── verify_account.php
+│   │   ├── donation_handlers/
+│   │   │   ├── delete_donation.php
+│   │   │   ├── get_available_listings.php
+│   │   │   ├── get_metrics.php
+│   │   │   ├── get_my_listings.php
+│   │   │   └── post_donation.php
+│   │   ├── request_handlers/
+│   │   │   ├── cancel_request.php
+│   │   │   ├── create_request.php
+│   │   │   ├── get_incoming.php
+│   │   │   ├── get_my_requests.php
+│   │   │   └── manage_request.php
+│   │   └── user_handlers/
+│   │       ├── get_current_user.php
+│   │       ├── login.php
+│   │       ├── logout.php
+│   │       ├── register.php
+│   │       ├── request_password_reset.php
+│   │       └── reset_password.php
+│   ├── css/
+│   │   ├── activity.css
+│   │   ├── admin-dashboard.css
+│   │   ├── auth.css
+│   │   ├── dashboard.css
+│   │   ├── donations.css
+│   │   ├── main.css
+│   │   ├── modals.css
+│   │   ├── requests.css
+│   │   └── settings.css
+│   ├── images/
+│   │   └── logo.png               # Platform brand logo (used in UI & CID email templates)
+│   └── js/
+│       ├── activity.js
+│       ├── admin.js
+│       ├── auth.js
+│       ├── dashboard.js
+│       ├── donations.js
+│       ├── requests.js
+│       ├── settings.js
+│       ├── ui.js
+│       ├── admin_modules/
+│       │   ├── admin_categories.js
+│       │   ├── admin_helpers.js
+│       │   ├── admin_listings.js
+│       │   ├── admin_reports_audit.js
+│       │   └── admin_users.js
+│       ├── auth_modules/
+│       │   ├── auth_engine.js
+│       │   ├── auth_forgot.js
+│       │   ├── auth_forms.js
+│       │   └── auth_logout.js
+│       ├── dashboard_modules/
+│       │   ├── dashboard_donations.js
+│       │   ├── dashboard_metrics.js
+│       │   ├── dashboard_notifications.js
+│       │   ├── dashboard_post_form.js
+│       │   └── dashboard_utils.js
+│       └── requests_modules/
+│           ├── requests_actions.js
+│           ├── requests_helpers.js
+│           ├── requests_incoming.js
+│           └── requests_my.js
 ├── sql/
 │   └── schema.sql                 # Primary DDL database creation script
-├── .gitignore                     # Git exclusion specifications
-├── Dockerfile                     # Apache/PHP container definition
+├── .gitignore                     # Git exclusion rules
+├── Dockerfile                     # Apache/PHP 8.2 container definition
 ├── README.md                      # Project documentation
-├── replate_dump.sql               # Production database seed data dump
-└── router.php                     # Local development PHP built-in server router
+├── replate_dump.sql               # Seed database dump
+└── router.php                     # Local PHP built-in server clean-URL router
 
-```
 
 ## Entity-Relationship & Database Schema (ERD)
 
-The MySQL database schema (`replate`) consists of six relational tables configured with strict foreign key constraints, indexes, and automatic transaction locks.
+The MySQL database schema (`replate`) consists of eight relational tables with foreign key constraints, indexes, and row-level transaction locks (`SELECT ... FOR UPDATE`).
 
 ```mermaid
 erDiagram
     users ||--|| user_settings : "1:1"
     users ||--o{ food_donations : "1:N (donor)"
+    food_categories ||--o{ food_donations : "1:N"
     users ||--o{ notifications : "1:N"
     users ||--o{ audit_logs : "1:N"
+    users ||--o{ password_resets : "1:N"
     food_donations ||--o{ donation_requests : "1:N"
     users ||--o{ donation_requests : "1:N (recipient)"
 ```
 
-<details>
-<summary>Click to view plain-text (ASCII) diagram</summary>
 
-```text
 +-------------------+         +-------------------+         +-------------------+
-|       users       |         |   food_donations  |         | donation_requests |
+|       users       |         |  food_donations   |         | donation_requests |
 +-------------------+         +-------------------+         +-------------------+
 | PK user_id        |<--------| PK donation_id    |<--------| PK request_id     |
 |    name           | (1:N)   | FK donor_id       | (1:N)   | FK donation_id    |
-|    org_name       |         |    food_name      |         | FK recipient_id (users)|
-|    email          |         |    quantity       |         |    quantity_requested |
-|    password_hash  |         |    pickup_location|         |    status         |
-|    role           |         |    status         |         |    created_at     |
-|    status         |         |    created_at     |         +-------------------+
-+-------------------+         +-------------------+
-  |                             |
-  | (1:1)                       | (1:N)
-  v                             v
-+-------------------+         +-------------------+         +-------------------+
-|   user_settings   |         |   notifications   |         |     audit_logs    |
-+-------------------+         +-------------------+         +-------------------+
-| PK user_id        |         | PK id             |         | PK log_id         |
-|    discretion     |         | FK user_id        |         | FK user_id        |
-+-------------------+         |    title          |         |    event_type     |
-|    message        |         |    action_details |         |                   |
-|    is_read        |         |    ip_address     |         |                   |
-+-------------------+         +-------------------+         +-------------------+
-```
+|    org_name       |         | FK category_id    |         | FK recipient_id   |
+|    email          |         |    food_name      |         |    quantity_req   |
+|    normalized_em  |         |    quantity       |         |    status         |
+|    password_hash  |         |    pickup_location|         |    created_at     |
+|    role           |         |    expiry_date    |         +-------------------+
+|    status         |         |    status         |
+|    is_verified    |         |    created_at     |         +-------------------+
++-------------------+         +-------------------+         |  food_categories  |
+  |         |                                               +-------------------+
+  | (1:1)   | (1:N)                                         | PK category_id    |
+  v         +-----------------------+                       |    name           |
++-------------------+               v                       |    description    |
+|   user_settings   |         +-------------------+         +-------------------+
++-------------------+         |   notifications   |
+| PK user_id        |         +-------------------+         +-------------------+
+|    phone_number   |         | PK id             |         |    audit_logs     |
+|    pickup_instr   |         | FK user_id        |         +-------------------+
+|    notify_inapp   |         |    title          |         | PK log_id         |
+|    notify_whatsapp|         |    message        |         | FK user_id        |
+|    notify_email   |         |    type           |         |    event_type     |
+|    discretion_mode|         |    is_read        |         |    action_details |
++-------------------+         +-------------------+         |    ip_address     |
+                                                            +-------------------+
 
-</details>
+
+
 
 ### Table Definitions
 
-1. **`users`**
+1. `users`
    * `user_id` (INT, Primary Key, Auto Increment)
    * `name` (VARCHAR 100, NOT NULL)
    * `org_name` (VARCHAR 255, NULL)
@@ -115,195 +186,187 @@ erDiagram
    * `normalized_email` (VARCHAR 150, UNIQUE, NOT NULL)
    * `password_hash` (VARCHAR 255, NOT NULL)
    * `role` (ENUM: `'recipient'`, `'donor'`, `'admin'`, DEFAULT `'recipient'`)
-   * `status` (VARCHAR 50, DEFAULT `'Active'`)
+   * `status` (VARCHAR 50, DEFAULT `'active'`)
+   * `is_verified` (TINYINT 1, DEFAULT `0`)
    * `created_at` (TIMESTAMP, DEFAULT `CURRENT_TIMESTAMP`)
 
-2. **`user_settings`**
-   * `user_id` (INT, Primary Key, Foreign Key -> `users.user_id` ON DELETE CASCADE)
+2. `user_settings`
+   * `user_id` (INT, Primary Key, Foreign Key → `users.user_id` ON DELETE CASCADE)
+   * `phone_number` (VARCHAR 30, NULL)
+   * `pickup_instructions` (TEXT, NULL)
+   * `notify_inapp` (TINYINT 1, DEFAULT `1`)
+   * `notify_whatsapp` (TINYINT 1, DEFAULT `1`)
+   * `notify_email` (TINYINT 1, DEFAULT `1`)
    * `discretion_mode` (TINYINT 1, DEFAULT `0`)
    * `updated_at` (TIMESTAMP, DEFAULT `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`)
 
-3. **`food_donations`**
+3. `food_categories`
+   * `category_id` (INT, Primary Key, Auto Increment)
+   * `name` (VARCHAR 100, UNIQUE, NOT NULL)
+   * `description` (TEXT, NULL)
+
+4. `food_donations`
    * `donation_id` (INT, Primary Key, Auto Increment)
-   * `donor_id` (INT, Foreign Key -> `users.user_id` ON DELETE CASCADE)
+   * `donor_id` (INT, Foreign Key → `users.user_id` ON DELETE CASCADE)
+   * `category_id` (INT, Foreign Key → `food_categories.category_id` ON DELETE SET NULL)
    * `food_name` (VARCHAR 255, NOT NULL)
-   * `category_id` (INT, NULL)
    * `quantity` (VARCHAR 100, NOT NULL)
+   * `unit` (VARCHAR 50, NULL)
    * `pickup_location` (VARCHAR 255, NOT NULL)
    * `expiry_date` (DATETIME, NULL)
    * `status` (ENUM: `'Available'`, `'Reserved'`, `'Collected'`, `'Cancelled'`, DEFAULT `'Available'`)
    * `created_at` (TIMESTAMP, DEFAULT `CURRENT_TIMESTAMP`)
 
-4. **`donation_requests`**
+5. `donation_requests`
    * `request_id` (INT, Primary Key, Auto Increment)
-   * `donation_id` (INT, Foreign Key -> `food_donations.donation_id` ON DELETE CASCADE)
-   * `recipient_id` (INT, Foreign Key -> `users.user_id` ON DELETE CASCADE)
+   * `donation_id` (INT, Foreign Key → `food_donations.donation_id` ON DELETE CASCADE)
+   * `recipient_id` (INT, Foreign Key → `users.user_id` ON DELETE CASCADE)
    * `quantity_requested` (VARCHAR 100, NOT NULL)
    * `status` (ENUM: `'Pending'`, `'Approved'`, `'Rejected'`, `'Cancelled'`, DEFAULT `'Pending'`)
    * `created_at` (TIMESTAMP, DEFAULT `CURRENT_TIMESTAMP`)
 
-5. **`notifications`**
+6. `notifications`
    * `id` (INT, Primary Key, Auto Increment)
-   * `user_id` (INT, Foreign Key -> `users.user_id` ON DELETE CASCADE)
+   * `user_id` (INT, Foreign Key → `users.user_id` ON DELETE CASCADE)
    * `title` (VARCHAR 255, NOT NULL)
    * `message` (TEXT, NOT NULL)
    * `type` (VARCHAR 50, DEFAULT `'info'`)
    * `is_read` (TINYINT 1, DEFAULT `0`)
    * `created_at` (TIMESTAMP, DEFAULT `CURRENT_TIMESTAMP`)
 
-6. **`audit_logs`**
+7. `audit_logs`
    * `log_id` (INT, Primary Key, Auto Increment)
-   * `user_id` (INT, Foreign Key -> `users.user_id` ON DELETE SET NULL)
+   * `user_id` (INT, Foreign Key → `users.user_id` ON DELETE SET NULL)
    * `event_type` (VARCHAR 100, NOT NULL)
    * `action_details` (TEXT, NOT NULL)
    * `log_type` (VARCHAR 20, DEFAULT `'info'`)
    * `ip_address` (VARCHAR 45, NOT NULL)
    * `created_at` (TIMESTAMP, DEFAULT `CURRENT_TIMESTAMP`)
 
----
+8. `password_resets`
+   * `user_id` (INT, Primary Key, Foreign Key → `users.user_id` ON DELETE CASCADE)
+   * `email` (VARCHAR 255, NOT NULL)
+   * `token_hash` (VARCHAR 255, NOT NULL)
+   * `expires_at` (DATETIME, NOT NULL)
 
 ## Detailed API Specification
 
-All API endpoints return JSON payloads adhering to the following structure:
-* **Success**: `{"success": true, "message": "...", "data": {...}}`
-* **Failure**: `{"success": false, "error": "ERR_CODE: Descriptive error message"}`
+All API endpoints return standardized JSON payloads:
 
-### Authentication & User Management (`/api/users.php`)
+* **Success:** `{"success": true, "message": "...", "data": {...}}`
+* **Failure:** `{"success": false, "error": "ERR_CODE: Descriptive error message"}`
 
-| Method | Action Param | Description | Input Payload | Response Data |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `register` | Registers a new donor or recipient account | `email`, `password`, `name`, `role`, `org_name` | User session initialized, success object |
-| `POST` | `login` | Authenticates existing user credentials | `email`, `password` | User details, session cookie set |
-| `POST` | `logout` | Destroys active user session | None | `{"success": true}` |
-| `GET` | `me` | Fetches active authenticated user details | None | User profile object |
 
-### Password Recovery Workflow (`/api/forgot_password.php`)
+### Authentication & Password Recovery (`/api/users.php` & `/api/forgot_password.php`)
 
-| Method | Action Param | Description | Input Payload | Response Data |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `request_otp` | Generates 6-digit OTP and sends via SMTP | `email` | `{"success": true, "message": "OTP sent"}` |
-| `POST` | `verify_otp` | Validates submitted OTP against session hash | `email`, `otp` | Reset token string |
-| `POST` | `reset_password` | Updates account password given valid token | `token`, `new_password` | `{"success": true}` |
+| Method | Endpoint / Action | Description | Input Payload |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/users.php?action=register` | Registers a new donor or recipient account | `email`, `password`, `name`, `role`, `org_name` |
+| `POST` | `/api/users.php?action=login` | Authenticates existing user credentials & creates session | `email`, `password` |
+| `POST` | `/api/users.php?action=logout` | Destroys active user session | None |
+| `GET` | `/api/users.php?action=me` | Fetches active authenticated user profile | None |
+| `POST` | `/api/users.php?action=request_reset` | Generates 6-digit OTP and sends branded email | `email` |
+| `POST` | `/api/users.php?action=reset_password` | Verifies OTP and updates password hash | `email`, `code`, `new_password` |
 
 ### Food Donation Lifecycle (`/api/donations.php`)
 
-| Method | Query / Body Action | Description | Access Control | Output |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `action=available` | Lists available food donations | Public / Recipient | Array of available donations |
-| `GET` | `action=my_donations` | Lists donations created by logged-in donor | Donor | Array of user donations |
-| `POST` | `action=create` | Creates a new food listing | Donor | Created donation object |
-| `POST` | `action=update` | Updates food listing details | Listing Owner | Updated donation object |
-| `POST` | `action=delete` | Deletes or cancels a donation listing | Listing Owner / Admin | Success confirmation |
-
-### Request & Claim Engine (`/api/requests.php`)
-
-| Method | Action Param | Description | Transaction Logic |
+| Method | Action Param | Description | Access Control |
 | :--- | :--- | :--- | :--- |
-| `GET` | `action=my_requests` | Retrieves claims submitted by active recipient | Joins `food_donations` and checks donor discretion setting |
-| `GET` | `action=incoming` | Retrieves incoming claims for donor's listings | Joins recipient details |
-| `POST` | `action=create` | Submits a new claim request for a donation | `SELECT ... FOR UPDATE` lock; prevents duplicate active claims |
-| `POST` | `action=approve` | Approves claim, marks listing `'Collected'`, rejects other pending claims | Database transaction; sends SMTP and in-app notifications |
-| `POST` | `action=reject` | Rejects specific request, leaves listing `'Available'` | Updates request status to `'Rejected'` |
-| `POST` | `action=cancel` | Recipient cancels their pending claim request | Updates request status to `'Cancelled'` |
+| `GET` | `action=list` (default) | Lists available surplus food donations | Public / Recipient / Admin |
+| `GET` | `action=my_listings` | Lists donations posted by logged-in donor | Donor |
+| `GET` | `action=metrics` | Returns role-specific metrics (posts/claims, active requests, CO₂ saved) | Authenticated User |
+| `POST` | N/A | Creates a new food surplus listing | Donor |
+| `DELETE` | N/A | Deletes a donation listing (`donation_id`) | Listing Owner / Admin |
 
-### Notification Management (`/api/notifications.php`)
+### Request, Claim & Multi-Channel Alert Engine (`/api/requests.php`)
 
-| Method | Action Param | Description |
+| Method | Action Param | Description | Alert & Transaction Logic |
+| :--- | :--- | :--- | :--- |
+| `GET` | `action=my_requests` | Retrieves claims submitted by active recipient | Respects donor `discretion_mode`; attaches `whatsapp_url` when approved |
+| `GET` | `action=incoming` | Retrieves incoming claims for donor's listings | Joins recipient details; attaches `whatsapp_url` when approved |
+| `POST` | `action=create` | Submits a new claim request for a donation | `SELECT ... FOR UPDATE` lock; triggers donor In-App & Email alerts |
+| `POST` | `action=approve` | Approves claim, marks listing `'Collected'`, rejects competing pending claims | Triggers recipient In-App & Email alerts + generates `wa.me` chat link |
+| `POST` | `action=reject` | Rejects specific request, keeps listing `'Available'` | Updates status to `'Rejected'`; notifies recipient |
+| `POST` | `action=cancel` | Recipient cancels their own pending claim request | Updates status to `'Cancelled'` |
+
+### Settings, Notifications & Admin Control (`/api/settings.php`, `/api/notifications.php`, `/api/admin.php`)
+
+| Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | N/A (`limit=50`)| Retrieves user notifications ordered by `created_at DESC` |
-| `POST` | `mark_read` | Sets `is_read = 1` for specific `notification_id` |
-| `POST` | `mark_all_read` | Sets `is_read = 1` for all notifications belonging to `user_id` |
-| `POST` | `clear_all` | Purges all notifications for active user |
-
----
+| `GET` / `POST` | `/api/settings.php` | Reads and updates profile details, password, and `notify_inapp`, `notify_whatsapp`, `notify_email` toggles |
+| `GET` / `POST` | `/api/notifications.php` | Retrieves in-app notifications (`limit=50`), marks single/all as read, or clears history |
+| `GET` / `POST` | `/api/admin.php` | Manages analytics, user verification/roles/status, categories, listings, requests, broadcasts, CSV reports, and audit logs |
 
 ## Security Implementation Specifications
 
-RePlate incorporates multi-layered application security headers, connection isolation, and anti-abuse safeguards:
-
-1. **SQL Injection Guard**:
-   * All database interactions strictly execute via PHP Data Objects (PDO) with prepared statements and bound parameter types (`PDO::ATTR_EMULATE_PREPARES => false`).
-
-2. **Cross-Site Scripting (XSS) Prevention**:
-   * Output encoding is applied to user-supplied text rendered on HTML templates using `htmlspecialchars(..., ENT_QUOTES, 'UTF-8')`.
-
-3. **Rate Limiting Engine (`config/Security.php`)**:
-   * Session-backed rate limits protect sensitive state-changing endpoints from brute-force attack vectors:
-     * Authentication: 5 attempts / 300 seconds
-     * Request creation: 15 submissions / 300 seconds
-     * Notification actions: 30 calls / 60 seconds
-
-4. **HTTP Security Headers**:
-   ```http
-   X-Frame-Options: DENY
-   X-Content-Type-Options: nosniff
-   X-XSS-Protection: 1; mode=block
-   Referrer-Policy: strict-origin-when-cross-origin
-   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
-
-5. **Credential Protection**:
-    * Passwords are hashed using `PASSWORD_BCRYPT` with auto-managed salt rounds. Session cookies are configured with `HttpOnly`, `SameSite=Lax`, and `Secure` (in HTTPS environments).
-
----
+1. **SQL Injection Protection:** All queries execute via PDO prepared statements with bound parameters (`PDO::ATTR_EMULATE_PREPARES => false`).
+2. **Cross-Site Scripting (XSS) Prevention:** User-generated content is escaped server-side with `htmlspecialchars(..., ENT_QUOTES, 'UTF-8')` and client-side via DOM text escaping utilities.
+3. **Session-Backed Rate Limiting (`config/Security.php`):** Protects authentication, password reset requests, settings updates, and claim creation against brute-force or spam floods.
+4. **HTTP Security Headers:** Enforces `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and Content Security Policy rules.
+5. **Credential & Secret Isolation:** Passwords are hashed with `PASSWORD_BCRYPT`. Active secrets (`config/db.php` and `config/mail.php`) are excluded from version control via `.gitignore`.
 
 ## Environment Setup & Installation Guide
 
 ### Prerequisites
 
-* PHP 8.2 or higher
-* MySQL 10.4 / MariaDB
-* Apache / Nginx Web Server with `mod_rewrite` enabled
-* Docker Desktop (Optional for containerized setup)
+* PHP 8.2 or higher (with `pdo_mysql` and `openssl` enabled)
+* MySQL 10.4+ or MariaDB
+* Apache with `mod_rewrite` enabled (XAMPP / LAMP) or PHP built-in development server
+* Docker Desktop (optional)
 
 ### Step-by-Step Local Deployment
 
-1. **Clone the Repository**:
-```bash
-git clone https://github.com/mahneeofficial/replate.git
-cd replate
+1. **Clone the Repository:**
 
+   ```bash
+   git clone https://github.com/mahneeofficial/replate.git
+   cd replate
+   ```
 
-1. **Database Initialization:**
+2. **Database Initialization:**
    * Create a MySQL database named `replate`.
-   * Import the SQL schema and seed data:
-     ```bash
-     mysql -u root -p replate < sql/schema.sql
-     mysql -u root -p replate < sql/replate_dump.sql
-     ```
+   * Import the schema and seed data:
 
-2. **Configure Local Environment Files:**
-   * Copy environment configuration templates to active configurations:
-     ```bash
-     cp config/db.php.example config/db.php
-     cp config/mail.php.example config/mail.php
-     ```
-   * Open `config/db.php` and set your database connection parameters:
-     ```php
-     $host = '127.0.0.1';
-     $db   = 'replate';
-     $user = 'root';
-     $pass = 'YOUR_LOCAL_MYSQL_PASSWORD'; // Set your local DB password here
-     ```
-   * Open `config/mail.php` and set your Gmail SMTP App Password for automated emails:
-     ```php
-     define('MAIL_USER', 'your-email@gmail.com');
-     define('MAIL_PASS', 'your-16-character-app-password');
-     ```
+   ```bash
+   mysql -u root -p replate < sql/schema.sql
+   mysql -u root -p replate < replate_dump.sql
+   ```
 
+3. **Configure Local Environment Files:**
+   * Copy the example configuration templates:
 
-3. **Web Server Setup**:
-   * Point your web server document root to the `replate/public/` directory.
-   * Verify that Apache has `mod_rewrite` enabled to support standard router behavior via `.htaccess`.
+   ```bash
+   cp config/db.php.example config/db.php
+   cp config/mail.php.example config/mail.php
+   ```
+
+   * Update `config/db.php` with your MySQL credentials (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`).
+   * Update `config/mail.php` with your SMTP server details and 16-character Gmail App Password (`MAIL_USER`, `MAIL_PASS`).
+
+4. **Start the Application Server:**
+   * **Option A — PHP Built-in Server (WSL / Linux / macOS / Windows CLI):**
+
+   ```bash
+   sudo service mysql start
+   php -S localhost:8000 router.php
+   ```
+
+   Open `http://localhost:8000` in your browser.
+
+   * **Option B — XAMPP Apache (No Terminal Required):**
+     * Start Apache and MySQL in the XAMPP Control Panel.
+     * Point Apache's `DocumentRoot` to `.../replate/public` (with `AllowOverride All` enabled so `public/.htaccess` handles clean URLs) and open `http://localhost`.
 
 ### Containerized Deployment (Docker)
 
-To deploy RePlate using Docker:
+1. **Build Container Image:**
 
-1. **Build Container Image**:
    ```bash
    docker build -t replate-app .
+   ```
 
-2. **Execute Docker Container:**
+2. **Run Container:**
+
    ```bash
    docker run -d -p 8080:80 \
      -e DB_HOST=host.docker.internal \
@@ -311,18 +374,17 @@ To deploy RePlate using Docker:
      -e DB_USER=root \
      -e DB_PASS=YOUR_LOCAL_MYSQL_PASSWORD \
      --name replate_container replate-app
+   ```
+
+3. **Access Platform:** Navigate to `http://localhost:8080`.
 
 
-3. **Access Platform Interface:**
-   * Navigate to `http://localhost:8080` in your web browser.
-
-
-### Error & System Logging Reference
+## Error & System Logging Reference
 
 | Error Code | Category | Cause / Resolution |
 | :--- | :--- | :--- |
-| `ERR_SYS_00` | Configuration | Database configuration file missing or PDO connection failure. Check `config/db.php`. |
-| `ERR_SYS_01` | System | Internal server exception thrown. Check PHP error logs in `logs/` directory. |
+| `ERR_SYS_00` | Configuration | Database configuration file missing or PDO connection refused. Verify MySQL is running and `config/db.php` is configured. |
+| `ERR_SYS_01` | System | Internal server exception thrown. Check PHP or Apache error logs. |
 | `ERR_AUTH_01` | Authentication | Action attempted without an active session. Prompt user login. |
 | `ERR_AUTH_02` | Authorization | User lacks adequate role permissions to modify target resource. |
 | `ERR_REQ_01` | Claim Workflow | Listing is no longer `'Available'`. |
@@ -330,24 +392,20 @@ To deploy RePlate using Docker:
 | `ERR_REQ_04` | Claim Workflow | Recipient already has an active pending claim for the item. |
 | `ERR_VAL_01` | Validation | Missing required payload parameters or input validation check failed. |
 
-
 ## Maintenance & Testing Commands
 
-To run sanity checks and clear local cache:
-
 ```bash
-# Check PHP Syntax across all endpoint scripts
+# Check PHP syntax across all API endpoint scripts
 find public/api/ -name "*.php" -exec php -l {} \;
 
-# Check active database logs
+# Tail Apache error logs (Linux/WSL)
 tail -n 100 /var/log/apache2/error.log
-
 ```
 
 ## License & Project Attribution
+
 Designed and built for the RePlate Food Redistribution Project. Distributed under the MIT License.
 
+### Author
 
-## Author
-
-* **Brian Kimani** - [@mahneeofficial](https://github.com/mahneeofficial)
+* **Brian Kimani** https://github.com/mahneeofficial

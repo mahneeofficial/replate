@@ -15,9 +15,14 @@ if (!$donationId) {
 $pdo->beginTransaction();
 
 $stmt = $pdo->prepare("
-    SELECT donor_id, food_name, status, quantity 
-    FROM food_donations 
-    WHERE donation_id = ? 
+    SELECT d.donor_id, d.food_name, d.status, d.quantity, d.unit, d.pickup_location,
+           u.email AS donor_email, COALESCE(u.org_name, u.name, 'Donor') AS donor_name,
+           COALESCE(s.notify_inapp, 1) AS notify_inapp,
+           COALESCE(s.notify_email, 1) AS notify_email
+    FROM food_donations d
+    JOIN users u ON d.donor_id = u.user_id
+    LEFT JOIN user_settings s ON u.user_id = s.user_id
+    WHERE d.donation_id = ? 
     FOR UPDATE
 ");
 $stmt->execute([$donationId]);
@@ -57,20 +62,48 @@ $stmtReq = $pdo->prepare("
 $stmtReq->execute([$donationId, $currentUserId, $donation['quantity']]);
 $requestId = (int)$pdo->lastInsertId();
 
-try {
-    $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)");
-    $notifStmt->execute([
-        $donation['donor_id'], 
-        'New Food Request', 
-        "A recipient requested your donation '{$donation['food_name']}'.", 
-        'request'
-    ]);
-} catch (Throwable $e) {
-    error_log("Failed to insert notification: " . $e->getMessage());
+// 1. In-App Notification (only if Donor enabled In-App Activity Alerts)
+if ((int)$donation['notify_inapp'] === 1) {
+    try {
+        $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)");
+        $notifStmt->execute([
+            $donation['donor_id'],
+            'New Food Request',
+            "A recipient requested your donation '{$donation['food_name']}'.",
+            'request'
+        ]);
+    } catch (Throwable $e) {
+        error_log("Failed to insert notification: " . $e->getMessage());
+    }
 }
 
 recordAuditLog($pdo, (int)$currentUserId, 'REQUEST_CREATED', "Submitted claim request #{$requestId} for donation #{$donationId}", 'info');
 
 $pdo->commit();
+
+// 2. Email Confirmation (if Donor enabled Free Email Confirmations)
+if ((int)$donation['notify_email'] === 1 && !empty($donation['donor_email'])) {
+    $mailConfig = __DIR__ . '/../../../config/mail.php';
+    if (file_exists($mailConfig)) {
+        require_once $mailConfig;
+        if (function_exists('sendEmail')) {
+            $safeDonor = htmlspecialchars((string)$donation['donor_name'], ENT_QUOTES, 'UTF-8');
+            $safeFood  = htmlspecialchars((string)$donation['food_name'], ENT_QUOTES, 'UTF-8');
+            $safeQty   = htmlspecialchars((string)($donation['quantity'] . ' ' . ($donation['unit'] ?? '')), ENT_QUOTES, 'UTF-8');
+            $html = "
+                <p>Hello <strong>{$safeDonor}</strong>,</p>
+                <p>A verified recipient organization has just submitted a claim request for your surplus listing:</p>
+                <ul>
+                    <li><strong>Food Item:</strong> {$safeFood}</li>
+                    <li><strong>Quantity:</strong> {$safeQty}</li>
+                    <li><strong>Request ID:</strong> #{$requestId}</li>
+                </ul>
+                <p>Log in to your RePlate dashboard and open <strong>Requests &amp; Claims</strong> to approve or decline this request.</p>
+            ";
+            @sendEmail($donation['donor_email'], "RePlate — New Claim Request for {$donation['food_name']}", $html);
+        }
+    }
+}
+
 http_response_code(201);
 echo json_encode(["success" => true, "message" => "Donation requested successfully."]);

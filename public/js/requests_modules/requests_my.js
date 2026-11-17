@@ -35,9 +35,16 @@ function renderMyRequests(requests, container) {
         const statusClass = escapeHTML(rawStatus.toLowerCase());
         const isPending = statusClass === 'pending';
 
-        const actionCell = isPending
-            ? `<button class="btn-danger action-btn" data-action="cancel" data-id="${requestId}" style="padding: 6px 12px; font-size: 0.8rem;">Cancel Claim</button>`
-            : `<span style="color: #94a3b8; font-size: 0.82rem;">—</span>`;
+        let actionCell = `<span style="color: #94a3b8; font-size: 0.82rem;">—</span>`;
+        if (isPending) {
+            actionCell = `<button class="btn-danger action-btn" data-action="cancel" data-id="${requestId}" style="padding: 6px 12px; font-size: 0.8rem;">Cancel Claim</button>`;
+        } else if (statusClass === 'approved' && req.whatsapp_url) {
+            actionCell = `
+                <a href="${escapeHTML(req.whatsapp_url)}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.8rem; text-decoration: none; background: #10b981; color: #052e16;">
+                    <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+                </a>
+            `;
+        }
 
         html += `
             <tr>

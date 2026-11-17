@@ -17,7 +17,7 @@ $normalizedEmail = (class_exists('Security') && method_exists('Security', 'norma
     : strtolower($rawEmail);
 
 try {
-    $stmt = $pdo->prepare("SELECT user_id FROM users WHERE normalized_email = ? OR email = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT user_id, COALESCE(name, org_name, 'User') AS display_name FROM users WHERE normalized_email = ? OR email = ? LIMIT 1");
     $stmt->execute([$normalizedEmail, $rawEmail]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -40,9 +40,23 @@ try {
     ");
     $stmtReset->execute([$user['user_id'], $rawEmail, $hashedCode, $expiresAt]);
 
-    recordAuditLog($pdo, (int)$user['user_id'], 'PASSWORD_RESET_REQUESTED', "Password reset requested for {$rawEmail}", 'info');
+    $mailConfig = __DIR__ . '/../../../config/mail.php';
+    if (file_exists($mailConfig)) {
+        require_once $mailConfig;
+        if (function_exists('sendEmail')) {
+            $safeName = htmlspecialchars((string)$user['display_name'], ENT_QUOTES, 'UTF-8');
+            $htmlBody = "
+                <p>Hello <strong>{$safeName}</strong>,</p>
+                <p>You requested a password reset for your RePlate account. Use the One-Time Password (OTP) below to complete your verification:</p>
+                <div class=\"code-box\">{$code}</div>
+                <p>This verification code expires in <strong>15 minutes</strong>.</p>
+                <p style=\"font-size: 13px; color: #64748b;\">If you did not request this password reset, please ignore this email or update your password to protect your account.</p>
+            ";
+            @sendEmail($rawEmail, "RePlate — Password Reset Code", $htmlBody);
+        }
+    }
 
-    error_log("Password reset code for {$rawEmail}: {$code}");
+    recordAuditLog($pdo, (int)$user['user_id'], 'PASSWORD_RESET_REQUESTED', "Password reset requested for {$rawEmail}", 'info');
 
     echo json_encode([
         "success" => true,

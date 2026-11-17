@@ -148,10 +148,19 @@ function renderIncomingRequests(requests, container) {
         const recipientEmail = escapeHTML(req.recipient_email || req.email || '');
         const quantity = escapeHTML(`${req.quantity_requested || req.quantity || '1'}`);
 
-        const actionButtons = isPending ? `
-            <button class="btn-primary action-btn" data-action="approve" data-id="${requestId}" style="padding: 6px 12px; font-size: 0.8rem; margin-right: 6px;">Approve</button>
-            <button class="btn-danger action-btn" data-action="reject" data-id="${requestId}" style="padding: 6px 12px; font-size: 0.8rem;">Reject</button>
-        ` : `<span class="status-badge ${status}">${escapeHTML(rawStatus)}</span>`;
+        let actionButtons = `<span class="status-badge ${status}">${escapeHTML(rawStatus)}</span>`;
+        if (isPending) {
+            actionButtons = `
+                <button class="btn-primary action-btn" data-action="approve" data-id="${requestId}" style="padding: 6px 12px; font-size: 0.8rem; margin-right: 6px;">Approve</button>
+                <button class="btn-danger action-btn" data-action="reject" data-id="${requestId}" style="padding: 6px 12px; font-size: 0.8rem;">Reject</button>
+            `;
+        } else if (status === 'approved' && req.whatsapp_url) {
+            actionButtons = `
+                <a href="${escapeHTML(req.whatsapp_url)}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.8rem; text-decoration: none; background: #10b981; color: #052e16;">
+                    <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+                </a>
+            `;
+        }
 
         html += `
             <tr>
