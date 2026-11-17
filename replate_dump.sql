@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: replate
 -- ------------------------------------------------------
--- Server version	8.0.46-0ubuntu0.24.04.4
+-- Server version	8.0.46-0ubuntu0.24.04.5
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,6 +16,38 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `audit_logs`
+--
+
+DROP TABLE IF EXISTS `audit_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `audit_logs` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `event_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action_details` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `log_type` enum('info','warning','security','critical') COLLATE utf8mb4_unicode_ci DEFAULT 'info',
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  KEY `idx_user_log` (`user_id`),
+  KEY `idx_type_created` (`log_type`,`created_at`),
+  CONSTRAINT `audit_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `audit_logs`
+--
+
+LOCK TABLES `audit_logs` WRITE;
+/*!40000 ALTER TABLE `audit_logs` DISABLE KEYS */;
+INSERT INTO `audit_logs` VALUES (1,1,'LOGIN_FAILED','Failed login attempt for email admin@replate.com','warning','127.0.0.1','2026-11-16 18:52:13'),(2,4,'USER_REGISTERED','User account registered with role \'recipient\'','info','127.0.0.1','2026-11-16 18:53:38'),(3,4,'USER_LOGIN','User successfully logged in','info','127.0.0.1','2026-11-16 18:53:50'),(4,4,'REQUEST_CREATED','Submitted claim request #3 for donation #3','info','127.0.0.1','2026-11-16 18:54:03'),(5,5,'USER_REGISTERED','User account registered with role \'recipient\'','info','127.0.0.1','2026-11-16 19:05:56'),(6,5,'USER_LOGIN','User successfully logged in','info','127.0.0.1','2026-11-16 19:06:05'),(7,5,'USER_LOGIN','User successfully logged in','info','127.0.0.1','2026-11-16 20:26:38');
+/*!40000 ALTER TABLE `audit_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `auth_tokens`
 --
 
@@ -24,14 +56,16 @@ DROP TABLE IF EXISTS `auth_tokens`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `auth_tokens` (
   `token_id` int NOT NULL AUTO_INCREMENT,
-  `selector` varchar(64) NOT NULL,
-  `hashed_validator` varchar(64) NOT NULL,
+  `selector` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hashed_validator` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_id` int NOT NULL,
   `expires_at` datetime NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`token_id`),
-  KEY `user_id` (`user_id`),
+  UNIQUE KEY `selector` (`selector`),
+  KEY `idx_user_tokens` (`user_id`),
   CONSTRAINT `auth_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -40,8 +74,35 @@ CREATE TABLE `auth_tokens` (
 
 LOCK TABLES `auth_tokens` WRITE;
 /*!40000 ALTER TABLE `auth_tokens` DISABLE KEYS */;
-INSERT INTO `auth_tokens` VALUES (1,'aa647d87b6106857e31f5735f3152c92','4b944030d4825efe051f306f091d8b2680fcbe1553b58a950f93a4e4548605b6',1,'2026-10-19 08:40:58'),(2,'5a1ed2e05e2390cae159564e31d9c3ca','71f2361b1fa3bb3e38369491ec0a82c16e0cb5ac8b6995d6d046b8016c1e2788',1,'2026-10-19 08:53:49'),(3,'19107a2d143f361547a88653d20c1916','ff2b9511a406e8197e9d6fbac03cadd5cbd3c9424c1c99d55cfa78ab4b964d26',1,'2026-10-19 13:06:33'),(4,'15a2805a5c76a37063c6d3d758163198','de4962a6c289544abdef1b5416e2d9107c2a5436743d19142ce793f5cd2f3cc4',1,'2026-10-19 13:29:00'),(5,'9508870ad1b26e709ea133bdc8cb6370','202a0b0284a8e3090319f31330990b6a11cdd9be2247d3a0348109d15b7c5dc1',2,'2026-10-19 13:32:00'),(6,'2a0226ae8e8b0acd64b3b7cf7e822d16','ce5a7776517d4d5bdf9f35aaa43a753779a7fe5e36af745034e605e5cc96db2a',1,'2026-10-20 08:25:04'),(7,'d56c9af2fb0c5209fb31f05fc3c3ea14','cada42bb11bd5f9ac03cb0f4312614078c7dd51db68bc4724ded95d2fd1b0033',2,'2026-10-20 08:34:08');
+INSERT INTO `auth_tokens` VALUES (1,'784be84282b10943d2297f5c61dfb2a4','5488c8cbc21ff1b992ccce09f9bbb3b65fd9ba97c6a6941ce0d146e84a71b97f',4,'2026-12-16 18:53:50','2026-11-16 18:53:50'),(2,'e48ba79309153c687be14bb71ed24e6f','82ca8b207ebb3e7f195f9436fde1328b38765f29d23ee61ff4affadfdaea12c1',5,'2026-12-16 19:06:05','2026-11-16 19:06:05'),(3,'1c2211b517f2787d407ad45e2db6b6c1','aae802d419627b7421b506db031e1bf8968bd9f67361b82a92a0673a57d56191',5,'2026-12-16 20:26:38','2026-11-16 20:26:38');
 /*!40000 ALTER TABLE `auth_tokens` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `categories`
+--
+
+DROP TABLE IF EXISTS `categories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `categories` (
+  `category_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`category_id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `categories`
+--
+
+LOCK TABLES `categories` WRITE;
+/*!40000 ALTER TABLE `categories` DISABLE KEYS */;
+INSERT INTO `categories` VALUES (1,'Prepared Meals','Freshly cooked meals and catering surplus','2026-11-16 13:29:35'),(2,'Produce & Fruits','Fresh vegetables, fruits, and organic produce','2026-11-16 13:29:35'),(3,'Bakery & Grains','Bread, pastries, flour, and grain products','2026-11-16 13:29:35'),(4,'Dairy & Groceries','Milk, cheese, eggs, and packaged goods','2026-11-16 13:29:35');
+/*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -55,15 +116,18 @@ CREATE TABLE `donation_requests` (
   `request_id` int NOT NULL AUTO_INCREMENT,
   `donation_id` int NOT NULL,
   `recipient_id` int NOT NULL,
-  `quantity_requested` varchar(50) NOT NULL,
-  `status` enum('Pending','Approved','Rejected','Completed') DEFAULT 'Pending',
+  `quantity_requested` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `collection_date` datetime DEFAULT NULL,
+  `status` enum('Pending','Approved','Rejected','Completed') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`request_id`),
-  KEY `donation_id` (`donation_id`),
-  KEY `recipient_id` (`recipient_id`),
+  UNIQUE KEY `uq_donation_recipient` (`donation_id`,`recipient_id`),
+  KEY `idx_recipient_status` (`recipient_id`,`status`),
   CONSTRAINT `donation_requests_ibfk_1` FOREIGN KEY (`donation_id`) REFERENCES `food_donations` (`donation_id`) ON DELETE CASCADE,
   CONSTRAINT `donation_requests_ibfk_2` FOREIGN KEY (`recipient_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -72,6 +136,7 @@ CREATE TABLE `donation_requests` (
 
 LOCK TABLES `donation_requests` WRITE;
 /*!40000 ALTER TABLE `donation_requests` DISABLE KEYS */;
+INSERT INTO `donation_requests` VALUES (1,1,3,10.00,NULL,NULL,'Pending','2026-11-16 13:29:35','2026-11-16 13:29:35'),(2,2,3,5.00,NULL,NULL,'Approved','2026-11-16 13:29:35','2026-11-16 13:29:35'),(3,3,4,30.00,NULL,NULL,'Pending','2026-11-16 18:54:03','2026-11-16 18:54:03');
 /*!40000 ALTER TABLE `donation_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -84,9 +149,12 @@ DROP TABLE IF EXISTS `food_categories`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `food_categories` (
   `category_id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  PRIMARY KEY (`category_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`category_id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -95,7 +163,7 @@ CREATE TABLE `food_categories` (
 
 LOCK TABLES `food_categories` WRITE;
 /*!40000 ALTER TABLE `food_categories` DISABLE KEYS */;
-INSERT INTO `food_categories` VALUES (1,'General Surplus');
+INSERT INTO `food_categories` VALUES (1,'Prepared Meals','Freshly cooked meals and catering surplus','2026-11-16 13:29:35'),(2,'Produce & Fruits','Fresh vegetables, fruits, and organic produce','2026-11-16 13:29:35'),(3,'Bakery & Grains','Bread, pastries, flour, and grain products','2026-11-16 13:29:35'),(4,'Dairy & Groceries','Milk, cheese, eggs, and packaged goods','2026-11-16 13:29:35');
 /*!40000 ALTER TABLE `food_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -110,19 +178,22 @@ CREATE TABLE `food_donations` (
   `donation_id` int NOT NULL AUTO_INCREMENT,
   `donor_id` int NOT NULL,
   `category_id` int DEFAULT '1',
-  `food_name` varchar(150) NOT NULL,
-  `quantity` varchar(50) NOT NULL,
-  `unit` varchar(20) DEFAULT 'kg',
+  `food_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `quantity` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `unit` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'kg',
   `expiry_date` datetime NOT NULL,
-  `pickup_location` varchar(255) NOT NULL,
-  `status` enum('Available','Reserved','Collected','Cancelled') DEFAULT 'Available',
+  `pickup_location` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('Available','Reserved','Collected','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Available',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`donation_id`),
-  KEY `donor_id` (`donor_id`),
+  KEY `idx_status_expiry` (`status`,`expiry_date`),
+  KEY `idx_donor` (`donor_id`),
   KEY `category_id` (`category_id`),
   CONSTRAINT `food_donations_ibfk_1` FOREIGN KEY (`donor_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `food_donations_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `food_categories` (`category_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -131,6 +202,7 @@ CREATE TABLE `food_donations` (
 
 LOCK TABLES `food_donations` WRITE;
 /*!40000 ALTER TABLE `food_donations` DISABLE KEYS */;
+INSERT INTO `food_donations` VALUES (1,2,2,'Fresh Organic Apples',NULL,25.00,'kg','2026-11-19 16:29:35','123 Market Street, Downtown','Available','2026-11-16 13:29:35','2026-11-16 13:29:35'),(2,2,3,'Assorted Artisan Breads',NULL,15.00,'loaves','2026-11-17 16:29:35','45 Bakery Lane','Available','2026-11-16 13:29:35','2026-11-16 13:29:35'),(3,2,1,'Prepared Vegetable Casseroles',NULL,30.00,'servings','2026-11-18 16:29:35','789 Commercial Ave','Available','2026-11-16 13:29:35','2026-11-16 13:29:35');
 /*!40000 ALTER TABLE `food_donations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -144,15 +216,15 @@ DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
-  `title` varchar(150) NOT NULL,
-  `message` text NOT NULL,
-  `type` varchar(50) DEFAULT 'info',
+  `title` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'info',
   `is_read` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
+  KEY `idx_user_unread` (`user_id`,`is_read`,`created_at`),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -161,6 +233,7 @@ CREATE TABLE `notifications` (
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,4,'Welcome to RePlate!','Your account has been created. Explore available donations or submit food requests near you.','welcome',0,'2026-11-16 18:53:38'),(2,4,'New Login Detected','Successful login recorded from 127.0.0.1 at 18:53, Nov 16, 2026.','security',0,'2026-11-16 18:53:50'),(3,2,'New Food Request','A recipient requested your donation \'Prepared Vegetable Casseroles\'.','request',0,'2026-11-16 18:54:03'),(4,5,'Welcome to RePlate!','Your account has been created. Explore available donations or submit food requests near you.','welcome',0,'2026-11-16 19:05:56'),(5,5,'New Login Detected','Successful login recorded from 127.0.0.1 at 19:06, Nov 16, 2026.','security',0,'2026-11-16 19:06:05'),(6,5,'New Login Detected','Successful login recorded from 127.0.0.1 at 20:26, Nov 16, 2026.','security',0,'2026-11-16 20:26:38');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -174,12 +247,14 @@ DROP TABLE IF EXISTS `password_resets`;
 CREATE TABLE `password_resets` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
-  `token` varchar(50) NOT NULL,
+  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `expires_at` datetime NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_user_token` (`user_id`,`token`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `token` (`token`),
+  KEY `idx_user_token` (`user_id`,`token`),
+  CONSTRAINT `password_resets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -188,6 +263,7 @@ CREATE TABLE `password_resets` (
 
 LOCK TABLES `password_resets` WRITE;
 /*!40000 ALTER TABLE `password_resets` DISABLE KEYS */;
+INSERT INTO `password_resets` VALUES (1,5,'752145','2026-11-17 07:23:01','2026-11-17 07:08:02');
 /*!40000 ALTER TABLE `password_resets` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -201,13 +277,13 @@ DROP TABLE IF EXISTS `reports`;
 CREATE TABLE `reports` (
   `report_id` int NOT NULL AUTO_INCREMENT,
   `generated_by` int NOT NULL,
-  `report_type` varchar(100) NOT NULL,
-  `content` text,
+  `report_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
   `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`report_id`),
   KEY `generated_by` (`generated_by`),
   CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`generated_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -230,11 +306,10 @@ CREATE TABLE `user_settings` (
   `setting_id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `discretion_mode` tinyint(1) DEFAULT '0',
-  `org_name` varchar(255) DEFAULT NULL,
-  `phone_number` varchar(50) DEFAULT NULL,
+  `phone_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `max_rescue_radius_km` int DEFAULT '10',
-  `vehicle_type` varchar(50) DEFAULT 'car',
-  `pickup_instructions` text,
+  `vehicle_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'car',
+  `pickup_instructions` text COLLATE utf8mb4_unicode_ci,
   `dietary_tags` json DEFAULT NULL,
   `storage_equipment` json DEFAULT NULL,
   `temp_logging_required` tinyint(1) DEFAULT '0',
@@ -242,15 +317,16 @@ CREATE TABLE `user_settings` (
   `auto_accept_trusted` tinyint(1) DEFAULT '0',
   `emergency_broadcasts` tinyint(1) DEFAULT '0',
   `expiry_alert_hours` int DEFAULT '3',
+  `notify_inapp` tinyint(1) DEFAULT '1',
   `notify_email` tinyint(1) DEFAULT '1',
   `notify_sms` tinyint(1) DEFAULT '0',
   `notify_whatsapp` tinyint(1) DEFAULT '0',
   `tax_receipts_enabled` tinyint(1) DEFAULT '0',
-  `notify_inapp` tinyint(1) DEFAULT '1',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`setting_id`),
-  KEY `user_id` (`user_id`),
+  UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `user_settings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -259,7 +335,7 @@ CREATE TABLE `user_settings` (
 
 LOCK TABLES `user_settings` WRITE;
 /*!40000 ALTER TABLE `user_settings` DISABLE KEYS */;
-INSERT INTO `user_settings` VALUES (1,1,0,'','0712345678',10,'','Racecourse','[]','[]',0,0,0,0,3,1,0,0,0,1),(2,2,0,NULL,NULL,10,'car',NULL,NULL,NULL,0,0,0,0,3,1,0,0,0,1);
+INSERT INTO `user_settings` VALUES (1,4,0,NULL,10,'car',NULL,NULL,NULL,0,0,0,0,3,1,1,0,0,0,'2026-11-16 18:53:38'),(2,5,0,NULL,10,'car',NULL,NULL,NULL,0,0,0,0,3,1,1,0,0,0,'2026-11-16 19:05:56');
 /*!40000 ALTER TABLE `user_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -272,18 +348,22 @@ DROP TABLE IF EXISTS `users`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `user_id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `org_name` varchar(255) DEFAULT NULL,
-  `email` varchar(150) NOT NULL,
-  `normalized_email` varchar(150) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `role` enum('recipient','donor','admin') DEFAULT 'recipient',
-  `status` varchar(50) DEFAULT 'Active',
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `org_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `normalized_email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('recipient','donor','admin') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'recipient',
+  `status` enum('Active','Suspended','Pending') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
+  `verification_status` enum('Unverified','Pending','Verified','Rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Unverified',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `normalized_email` (`normalized_email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `normalized_email` (`normalized_email`),
+  KEY `idx_role_status` (`role`,`status`),
+  KEY `idx_verification` (`verification_status`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -292,7 +372,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Brian Khalid',NULL,'brian.kimani1@student.moringaschool.com','brian.kimani1@student.moringaschool.com','$2y$12$0zZdSqPnTJvnqaf7VPXagO8YSkCWclrYZeTgFzRhHDdLeo6pyMQ0G','recipient','Active','2026-09-18 18:13:14'),(2,'Brian Kimani',NULL,'briankimani432@gmail.com','briankimani432@gmail.com','$2y$12$Rsj4KVyQ.AT0anIt005.0..b3QMzsWx7yT91OTd5Eess9omm/9OH.','admin','Active','2026-09-19 13:31:46');
+INSERT INTO `users` VALUES (1,'System Admin',NULL,'admin@replate.com','admin@replate.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','admin','Active','Verified','2026-11-16 13:29:35','2026-11-16 13:29:35'),(2,'Green Valley Supermarket',NULL,'donor@replate.com','donor@replate.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','donor','Active','Verified','2026-11-16 13:29:35','2026-11-16 13:29:35'),(3,'Hope Community Kitchen',NULL,'recipient@replate.com','recipient@replate.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','recipient','Active','Verified','2026-11-16 13:29:35','2026-11-16 13:29:35'),(4,'Moringa Daily Dev',NULL,'moringadailydev@gmail.com','moringadailydev@gmail.com','$2y$12$T0fCfhv2VS3zrh8/8bDXmOUnzmlJc9lafi7Jf7Mlp5wfzm/JmANEG','recipient','Active','Pending','2026-11-16 18:53:38','2026-11-16 18:53:38'),(5,'Brian Recipient',NULL,'briankimani432@gmail.com','briankimani432@gmail.com','$2y$12$6jrX6yTnWICd/agFSRYS2uRqwwHDk8QqwfHPEECzPPKyiosbk.en6','recipient','Active','Pending','2026-11-16 19:05:56','2026-11-16 19:05:56');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -305,4 +385,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-09-20 20:01:54
+-- Dump completed on 2026-11-17 17:23:55
