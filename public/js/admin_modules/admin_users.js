@@ -24,6 +24,7 @@ async function loadUsers() {
             const isVerified = parseInt(u.is_verified, 10) === 1;
             const isSuspended = (u.status || '').toLowerCase() === 'suspended';
             const isAdmin = (u.role || '').toLowerCase() === 'admin';
+            const displayName = u.name || u.org_name || u.business_name || 'N/A';
 
             const verifyBadge = isVerified
                 ? `<span class="badge badge-success"><i class="fa-solid fa-check"></i> Verified</span>`
@@ -39,31 +40,46 @@ async function loadUsers() {
 
             return `
                 <tr>
-                    <td><strong>${escapeHTML(u.name || u.business_name || 'N/A')}</strong></td>
-                    <td><small class="text-muted">${escapeHTML(u.email || 'N/A')}</small></td>
+                    <td><strong>${escapeHTML(displayName)}</strong></td>
+                    <td><small>${escapeHTML(u.email || 'N/A')}</small></td>
                     <td>${roleBadge}</td>
                     <td>${statusBadge}</td>
                     <td>${verifyBadge}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-sm btn-outline-primary" onclick="viewUserDetails(${u.user_id})"><i class="fa-solid fa-eye"></i> Details</button>
+                            <button type="button" class="btn-sm btn-outline-primary user-action-btn" data-op="details" data-id="${u.user_id}"><i class="fa-solid fa-eye"></i> Details</button>
                             ${isVerified
-                                ? `<button class="btn-sm btn-outline-danger" onclick="confirmUserVerification(${u.user_id}, 0)">Unverify</button>`
-                                : `<button class="btn-sm btn-outline-success" onclick="confirmUserVerification(${u.user_id}, 1)">Verify</button>`
+                                ? `<button type="button" class="btn-sm btn-outline-danger user-action-btn" data-op="verify" data-val="0" data-id="${u.user_id}">Unverify</button>`
+                                : `<button type="button" class="btn-sm btn-outline-success user-action-btn" data-op="verify" data-val="1" data-id="${u.user_id}">Verify</button>`
                             }
                             ${isSuspended
-                                ? `<button class="btn-sm btn-success" onclick="confirmUserStatus(${u.user_id}, 'Active')">Approve</button>`
-                                : `<button class="btn-sm btn-danger" onclick="confirmUserStatus(${u.user_id}, 'Suspended')">Suspend</button>`
+                                ? `<button type="button" class="btn-sm btn-success user-action-btn" data-op="status" data-val="Active" data-id="${u.user_id}">Activate</button>`
+                                : `<button type="button" class="btn-sm btn-warning user-action-btn" data-op="status" data-val="Suspended" data-id="${u.user_id}">Suspend</button>`
                             }
                             ${isAdmin
-                                ? `<button class="btn-sm btn-warning" onclick="confirmAdminRoleToggle(${u.user_id}, 'donor')">Revoke Admin</button>`
-                                : `<button class="btn-sm btn-info" onclick="confirmAdminRoleToggle(${u.user_id}, 'admin')">Make Admin</button>`
+                                ? `<button type="button" class="btn-sm btn-outline-primary user-action-btn" data-op="role" data-val="donor" data-id="${u.user_id}">Revoke Admin</button>`
+                                : `<button type="button" class="btn-sm btn-info user-action-btn" data-op="role" data-val="admin" data-id="${u.user_id}">Make Admin</button>`
                             }
+                            <button type="button" class="btn-sm btn-danger user-action-btn" data-op="delete" data-name="${escapeHTML(displayName)}" data-id="${u.user_id}"><i class="fa-solid fa-user-xmark"></i> Remove</button>
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
+
+        tbody.onclick = (e) => {
+            const btn = e.target.closest('.user-action-btn');
+            if (!btn) return;
+            const userId = btn.getAttribute('data-id');
+            const op = btn.getAttribute('data-op');
+            const val = btn.getAttribute('data-val');
+
+            if (op === 'details') viewUserDetails(userId);
+            else if (op === 'verify') confirmUserVerification(userId, parseInt(val, 10));
+            else if (op === 'status') confirmUserStatus(userId, val);
+            else if (op === 'role') confirmAdminRoleToggle(userId, val);
+            else if (op === 'delete') confirmDeleteUser(userId, btn.getAttribute('data-name') || 'this user');
+        };
     } catch (err) {
         console.error('Failed to load users:', err);
         tbody.innerHTML = `<tr><td colspan="6" class="table-empty text-danger">Failed to load user records.</td></tr>`;
@@ -71,21 +87,23 @@ async function loadUsers() {
 }
 
 function viewUserDetails(userId) {
-    const user = (window.adminUsersList || []).find(u => u.user_id == userId);
+    const user = (window.adminUsersList || []).find(u => String(u.user_id) === String(userId));
     const modalBody = document.getElementById('userDetailsBody');
     if (!user || !modalBody) return;
 
+    const rowStyle = 'padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem;';
+
     modalBody.innerHTML = `
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>User ID:</strong> #${user.user_id}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Full Name:</strong> ${escapeHTML(user.name || 'N/A')}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Business / Organization:</strong> ${escapeHTML(user.business_name || 'N/A')}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Email:</strong> ${escapeHTML(user.email || 'N/A')}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Phone Number:</strong> ${escapeHTML(user.phone || 'N/A')}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Role:</strong> ${escapeHTML(user.role || 'User')}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Account Status:</strong> ${escapeHTML(user.status || 'Active')}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Verification Status:</strong> ${parseInt(user.is_verified, 10) === 1 ? 'Verified' : 'Unverified'}</div>
-        <div style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Address / Location:</strong> ${escapeHTML(user.address || 'N/A')}</div>
-        <div style="padding: 8px 0;"><strong>Registration Date:</strong> ${formatDate(user.created_at)}</div>
+        <div style="${rowStyle}"><strong>User ID:</strong> <span>#${user.user_id}</span></div>
+        <div style="${rowStyle}"><strong>Full Name:</strong> <span>${escapeHTML(user.name || 'N/A')}</span></div>
+        <div style="${rowStyle}"><strong>Business / Organization:</strong> <span>${escapeHTML(user.org_name || user.business_name || 'N/A')}</span></div>
+        <div style="${rowStyle}"><strong>Email:</strong> <span>${escapeHTML(user.email || 'N/A')}</span></div>
+        <div style="${rowStyle}"><strong>Phone Number:</strong> <span>${escapeHTML(user.phone_number || user.phone || 'Not provided')}</span></div>
+        <div style="${rowStyle}"><strong>Role:</strong> <span style="text-transform: capitalize;">${escapeHTML(user.role || 'User')}</span></div>
+        <div style="${rowStyle}"><strong>Account Status:</strong> <span>${escapeHTML(user.status || 'Active')}</span></div>
+        <div style="${rowStyle}"><strong>Verification:</strong> <span>${parseInt(user.is_verified, 10) === 1 ? 'Verified' : 'Unverified'}</span></div>
+        <div style="${rowStyle}"><strong>Address / Pickup Notes:</strong> <span>${escapeHTML(user.pickup_instructions || user.address || 'Not provided')}</span></div>
+        <div style="padding: 9px 0; display: flex; justify-content: space-between; font-size: 0.9rem;"><strong>Registered:</strong> <span>${formatDate(user.created_at)}</span></div>
     `;
 
     toggleModal('userDetailsModal', true);
@@ -118,9 +136,12 @@ function confirmUserVerification(userId, verifyStatus) {
 }
 
 function confirmUserStatus(userId, status) {
+    const extraMsg = status === 'Suspended'
+        ? ' They will immediately be blocked from logging in and shown a suspension notice.'
+        : ' They will regain full access to RePlate.';
     showConfirmModal(
         `Confirm Account ${status}`,
-        `Are you sure you want to set status to "${status}" for user ID #${userId}?`,
+        `Are you sure you want to set status to "${status}" for user ID #${userId}?${extraMsg}`,
         async () => {
             try {
                 const res = await fetch('/api/admin?action=update_user_status', {
@@ -163,6 +184,31 @@ function confirmAdminRoleToggle(userId, newRole) {
                 }
             } catch (err) {
                 showToast('Network error updating user role.', 'danger');
+            }
+        }
+    );
+}
+
+function confirmDeleteUser(userId, displayName) {
+    showConfirmModal(
+        'Permanently Remove User Account',
+        `Are you sure you want to permanently remove "${displayName}" (#${userId}) from RePlate? All their listings, requests, and active sessions will be deleted immediately.`,
+        async () => {
+            try {
+                const res = await fetch('/api/admin?action=delete_user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || 'User removed from platform.', 'success');
+                    loadUsers();
+                } else {
+                    showToast(data.error || 'Failed to remove user.', 'danger');
+                }
+            } catch (err) {
+                showToast('Network error removing user account.', 'danger');
             }
         }
     );

@@ -15,7 +15,7 @@ if (!$rawEmail || !$password) {
 }
 
 $normalizedEmail = (class_exists('Security') && method_exists('Security', 'normalizeEmail'))
-    ? Security::normalizeEmail($rawEmail) 
+    ? Security::normalizeEmail($rawEmail)
     : $rawEmail;
 
 try {
@@ -29,21 +29,25 @@ try {
     $stmt->execute([$normalizedEmail, $rawEmail]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    if (!$user) {
+        http_response_code(401);
+        echo json_encode(["success" => false, "error" => "ERR_AUTH_01: No active account found with that email address. If your account was removed by an administrator, please contact support."]);
+        return;
+    }
+
     $dbPasswordHash = $user['password_hash'] ?? $user['password'] ?? '';
 
-    if (!$user || !password_verify($password, $dbPasswordHash)) {
-        if ($user) {
-            recordAuditLog($pdo, (int)$user['user_id'], 'LOGIN_FAILED', "Failed login attempt for email {$rawEmail}", 'warning');
-        }
+    if (!password_verify($password, $dbPasswordHash)) {
+        recordAuditLog($pdo, (int)$user['user_id'], 'LOGIN_FAILED', "Failed login attempt for email {$rawEmail}", 'warning');
         http_response_code(401);
         echo json_encode(["success" => false, "error" => "ERR_AUTH_01: Invalid email or password."]);
         return;
     }
 
-    if (isset($user['status']) && strtolower((string)$user['status']) === 'suspended') {
+    if (isset($user['status']) && strtolower(trim((string)$user['status'])) === 'suspended') {
         recordAuditLog($pdo, (int)$user['user_id'], 'LOGIN_BLOCKED', "Suspended user tried to log in", 'warning');
         http_response_code(403);
-        echo json_encode(["success" => false, "error" => "ERR_AUTH_03: Account suspended. Contact support."]);
+        echo json_encode(["success" => false, "error" => "ERR_AUTH_03: Your account has been suspended by an administrator. Please contact RePlate support for assistance."]);
         return;
     }
 

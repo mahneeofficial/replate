@@ -18,22 +18,28 @@ async function loadCategories() {
             return;
         }
 
-        tbody.innerHTML = data.categories.map(c => {
-            const safeNameParam = escapeAttributeJS(c.name || '');
-            return `
-                <tr>
-                    <td>#${c.category_id}</td>
-                    <td><strong>${escapeHTML(c.name || '')}</strong></td>
-                    <td>${escapeHTML(c.description || 'No description provided')}</td>
-                    <td><span class="badge badge-info">${c.listings_count || 0} donations</span></td>
-                    <td>
-                        <button class="btn-sm btn-danger" onclick="confirmDeleteCategory(${c.category_id}, ${safeNameParam})">
-                            <i class="fa-solid fa-trash"></i> Delete
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        tbody.innerHTML = data.categories.map(c => `
+            <tr>
+                <td>#${c.category_id}</td>
+                <td><strong>${escapeHTML(c.name || '')}</strong></td>
+                <td>${escapeHTML(c.description || 'No description provided')}</td>
+                <td><span class="badge badge-info">${c.listings_count || 0} donations</span></td>
+                <td>
+                    <button type="button" class="btn-sm btn-danger delete-category-btn" data-id="${c.category_id}" data-name="${escapeHTML(c.name || '')}">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        tbody.onclick = (e) => {
+            const btn = e.target.closest('.delete-category-btn');
+            if (btn) {
+                const catId = btn.getAttribute('data-id');
+                const catName = btn.getAttribute('data-name') || 'Category';
+                confirmDeleteCategory(catId, catName);
+            }
+        };
     } catch (err) {
         console.error('Failed to load categories:', err);
         tbody.innerHTML = `<tr><td colspan="5" class="table-empty text-danger">Failed to load categories.</td></tr>`;

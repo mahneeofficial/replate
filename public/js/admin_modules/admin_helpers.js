@@ -37,14 +37,15 @@ function showConfirmModal(title, description, onConfirmCallback) {
 function handleUnauthorizedAccess() {
     showToast('Admin session expired or unauthorized. Redirecting...', 'danger');
     setTimeout(() => {
+        localStorage.removeItem('replate_user');
         localStorage.removeItem('user');
         window.location.replace('/login');
     }, 1500);
 }
 
 function showToast(message, type = 'info') {
-    if (typeof window.showToast === 'function' && window.showToast !== showToast) {
-        window.showToast(message, type);
+    if (window.UIEngine && typeof window.UIEngine.showToast === 'function') {
+        window.UIEngine.showToast(message, type === 'danger' ? 'error' : type);
         return;
     }
 
@@ -54,8 +55,28 @@ function showToast(message, type = 'info') {
         return;
     }
 
+    const colorMap = {
+        success: '#10b981',
+        danger: '#f43f5e',
+        error: '#f43f5e',
+        warning: '#f59e0b',
+        info: '#38bdf8'
+    };
+    const accent = colorMap[type] || '#38bdf8';
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+        background: #151b28;
+        color: ${accent};
+        border: 1px solid ${accent}55;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        margin-bottom: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+    `;
     toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
     container.appendChild(toast);
 
@@ -84,7 +105,7 @@ function formatDate(dateStr) {
 
 function escapeHTML(str) {
     if (typeof str !== 'string') return str;
-    return str.replace(/[&<>'"]/g, 
+    return str.replace(/[&<>'"]/g,
         tag => ({
             '&': '&amp;',
             '<': '&lt;',
@@ -93,8 +114,4 @@ function escapeHTML(str) {
             '"': '&quot;'
         }[tag] || tag)
     );
-}
-
-function escapeAttributeJS(str) {
-    return JSON.stringify(str || '').replace(/"/g, '&quot;');
 }

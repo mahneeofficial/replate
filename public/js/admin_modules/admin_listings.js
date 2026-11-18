@@ -18,22 +18,28 @@ async function loadListings() {
             return;
         }
 
-        tbody.innerHTML = data.listings.map(l => {
-            const safeFoodName = escapeAttributeJS(l.food_name || 'Unnamed Item');
-            return `
-                <tr>
-                    <td><strong>${escapeHTML(l.food_name || 'Unnamed Item')}</strong> (${escapeHTML(l.quantity || '')} ${escapeHTML(l.unit || '')})</td>
-                    <td>${escapeHTML(l.donor_name || 'Unknown Donor')}</td>
-                    <td><span class="badge badge-secondary">${escapeHTML(l.category_name || 'Uncategorized')}</span></td>
-                    <td>${formatDate(l.expiry_date)}</td>
-                    <td>
-                        <button class="btn-sm btn-danger" onclick="confirmRemoveListing(${l.donation_id}, ${safeFoodName})">
-                            <i class="fa-solid fa-trash"></i> Remove
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        tbody.innerHTML = data.listings.map(l => `
+            <tr>
+                <td><strong>${escapeHTML(l.food_name || 'Unnamed Item')}</strong> (${escapeHTML(String(l.quantity || ''))} ${escapeHTML(l.unit || '')})</td>
+                <td>${escapeHTML(l.donor_name || 'Unknown Donor')}</td>
+                <td><span class="badge badge-secondary">${escapeHTML(l.category_name || 'Uncategorized')}</span></td>
+                <td>${formatDate(l.expiry_date)}</td>
+                <td>
+                    <button type="button" class="btn-sm btn-danger remove-listing-btn" data-id="${l.donation_id}" data-name="${escapeHTML(l.food_name || 'Unnamed Item')}">
+                        <i class="fa-solid fa-trash"></i> Remove
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        tbody.onclick = (e) => {
+            const btn = e.target.closest('.remove-listing-btn');
+            if (btn) {
+                const donationId = btn.getAttribute('data-id');
+                const foodName = btn.getAttribute('data-name') || 'Item';
+                confirmRemoveListing(donationId, foodName);
+            }
+        };
     } catch (err) {
         console.error('Failed to load listings:', err);
         tbody.innerHTML = `<tr><td colspan="5" class="table-empty text-danger">Failed to load donation listings.</td></tr>`;
@@ -87,7 +93,7 @@ async function loadDonationRequests() {
             return `
                 <tr>
                     <td>#REQ-${r.request_id}</td>
-                    <td><strong>${escapeHTML(r.food_name || 'Item')}</strong> (${escapeHTML(r.quantity || '')} ${escapeHTML(r.unit || '')})</td>
+                    <td><strong>${escapeHTML(r.food_name || 'Item')}</strong> (${escapeHTML(String(r.quantity || ''))} ${escapeHTML(r.unit || '')})</td>
                     <td>${escapeHTML(r.recipient_name || 'N/A')}</td>
                     <td><span class="badge ${statusClass}">${escapeHTML(r.status || 'Pending')}</span></td>
                     <td>${formatDate(r.created_at)}</td>

@@ -4,10 +4,17 @@ try {
     $userNameCol = hasTableColumn($pdo, 'users', 'name') ? 'u.name' : (hasTableColumn($pdo, 'users', 'full_name') ? 'u.full_name' : 'u.email');
 
     $stmt = $pdo->query("
-        SELECT n.id, n.title, n.message, n.type, n.created_at, {$userNameCol} AS user_name, u.email 
-        FROM notifications n
-        JOIN users u ON n.user_id = u.user_id
-        ORDER BY n.created_at DESC LIMIT 50
+        SELECT a.log_id AS id,
+               a.event_type AS title,
+               a.action_details AS message,
+               a.log_type AS type,
+               a.created_at,
+               COALESCE({$userNameCol}, 'System / Deleted User') AS user_name,
+               COALESCE(u.email, 'system@replate.local') AS email
+        FROM audit_logs a
+        LEFT JOIN users u ON a.user_id = u.user_id
+        ORDER BY a.created_at DESC
+        LIMIT 100
     ");
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     echo json_encode(['success' => true, 'logs' => $logs]);

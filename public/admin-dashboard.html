@@ -22,7 +22,7 @@
 
     <!-- FontAwesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/css/main.css">
@@ -34,7 +34,13 @@
 
     <aside class="sidebar">
         <div class="sidebar-wrapper">
-            <div class="brand"><i class="fa-solid fa-shield-halved"></i> RePlate Admin</div>
+            <div class="brand">
+                <img src="/images/logo.png" alt="RePlate Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <span>RePlate</span>
+                    <small class="brand-badge">Admin Control</small>
+                </div>
+            </div>
             <ul class="nav-list">
                 <li class="nav-item"><button class="active" onclick="switchTab('analytics', this)"><i class="fa-solid fa-chart-pie"></i> Impact Analytics</button></li>
                 <li class="nav-item"><button onclick="switchTab('users', this)"><i class="fa-solid fa-users-gear"></i> User Moderation</button></li>
@@ -44,7 +50,9 @@
                 <li class="nav-item"><button onclick="switchTab('reports', this)"><i class="fa-solid fa-file-invoice"></i> System Reports</button></li>
                 <li class="nav-item"><button onclick="switchTab('notifications', this)"><i class="fa-solid fa-bell"></i> Notifications</button></li>
                 <li class="nav-item"><button onclick="switchTab('audit', this)"><i class="fa-solid fa-list-check"></i> Audit Logs</button></li>
-                <li class="nav-item"><button onclick="window.location.href='/dashboard'"><i class="fa-solid fa-arrow-left"></i> User Dashboard</button></li>
+                <li class="nav-item" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+                    <button onclick="window.location.href='/dashboard'"><i class="fa-solid fa-arrow-left"></i> User Dashboard</button>
+                </li>
             </ul>
         </div>
         <div class="admin-user-footer">
@@ -70,16 +78,18 @@
         <!-- 2. User Moderation Panel -->
         <section id="users" class="tab-panel">
             <h2>User Moderation & Account Approvals</h2>
-            <p class="section-desc">Verify Donors and Recipients, manage roles (Admin/Donor/Recipient), and suspend/approve accounts.</p>
+            <p class="section-desc">Verify Donors and Recipients, manage roles, suspend accounts, or remove users from the platform.</p>
 
-            <table class="data-table">
-                <thead>
-                    <tr><th>User / Business</th><th>Email</th><th>Role</th><th>Status</th><th>Verification</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="usersTableBody">
-                    <tr><td colspan="6" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>User / Business</th><th>Email</th><th>Role</th><th>Status</th><th>Verification</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="6" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- 3. Food Categories Management Panel -->
@@ -88,32 +98,36 @@
             <p class="section-desc">Create, update, and remove food classification categories.</p>
 
             <div class="panel-actions">
-                <button class="btn-primary" id="addCategoryBtn"><i class="fa-solid fa-plus"></i> Add Category</button>
+                <button type="button" class="btn-primary" id="addCategoryBtn"><i class="fa-solid fa-plus"></i> Add Category</button>
             </div>
 
-            <table class="data-table">
-                <thead>
-                    <tr><th>Category ID</th><th>Category Name</th><th>Description</th><th>Listings Count</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="categoriesTableBody">
-                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading categories...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Category ID</th><th>Category Name</th><th>Description</th><th>Listings Count</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
+                        <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading categories...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- 4. Listing Moderation Panel -->
         <section id="listings" class="tab-panel">
             <h2>Monitor Food Donations</h2>
-            <p class="section-desc">Monitor posted food listings, remove expired or non-compliant donations.</p>
+            <p class="section-desc">Monitor posted food listings and remove expired or non-compliant donations.</p>
 
-            <table class="data-table">
-                <thead>
-                    <tr><th>Food Title</th><th>Donor</th><th>Category</th><th>Expiry</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="listingsTableBody">
-                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading listings...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Food Title</th><th>Donor</th><th>Category</th><th>Expiry</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="listingsTableBody">
+                        <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading listings...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- 5. Monitor Donation Requests Panel -->
@@ -121,14 +135,16 @@
             <h2>Monitor Donation Requests</h2>
             <p class="section-desc">Track active claims and requests submitted by recipient organizations.</p>
 
-            <table class="data-table">
-                <thead>
-                    <tr><th>Request ID</th><th>Listing</th><th>Recipient Organization</th><th>Status</th><th>Date</th></tr>
-                </thead>
-                <tbody id="requestsTableBody">
-                    <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading requests...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Request ID</th><th>Listing</th><th>Recipient Organization</th><th>Status</th><th>Date</th></tr>
+                    </thead>
+                    <tbody id="requestsTableBody">
+                        <tr><td colspan="5" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading requests...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- 6. Generate Reports Panel -->
@@ -140,17 +156,17 @@
                 <div class="report-card">
                     <h3>Donation Impact Summary</h3>
                     <p>Detailed breakdown of rescued food weight and environmental metrics.</p>
-                    <button class="btn-secondary" onclick="generateReport('impact')"><i class="fa-solid fa-download"></i> Export CSV</button>
+                    <button type="button" class="btn-secondary" onclick="generateReport('impact')"><i class="fa-solid fa-download"></i> Export CSV</button>
                 </div>
                 <div class="report-card">
                     <h3>User Audit & Activity Report</h3>
                     <p>Registration logs, verification statuses, and account activities.</p>
-                    <button class="btn-secondary" onclick="generateReport('users')"><i class="fa-solid fa-download"></i> Export CSV</button>
+                    <button type="button" class="btn-secondary" onclick="generateReport('users')"><i class="fa-solid fa-download"></i> Export CSV</button>
                 </div>
                 <div class="report-card">
                     <h3>Fulfillment & Claims Report</h3>
                     <p>Log of all requested vs. completed food claims and delivery statuses.</p>
-                    <button class="btn-secondary" onclick="generateReport('claims')"><i class="fa-solid fa-download"></i> Export CSV</button>
+                    <button type="button" class="btn-secondary" onclick="generateReport('claims')"><i class="fa-solid fa-download"></i> Export CSV</button>
                 </div>
             </div>
         </section>
@@ -186,24 +202,26 @@
             <h2>System Audit Logs</h2>
             <p class="section-desc">Track login attempts, claims, and administrative actions.</p>
 
-            <table class="data-table">
-                <thead>
-                    <tr><th>Timestamp</th><th>Event / Action</th><th>User</th><th>Log Type</th></tr>
-                </thead>
-                <tbody id="auditTableBody">
-                    <tr><td colspan="4" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading system logs...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Timestamp</th><th>Event / Action</th><th>User</th><th>Log Type</th></tr>
+                    </thead>
+                    <tbody id="auditTableBody">
+                        <tr><td colspan="4" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading system logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
 
     <!-- Full User Profile Details Modal -->
     <div id="userDetailsModal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 580px;">
             <h3>User Profile & Account Details</h3>
-            <div id="userDetailsBody" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;"></div>
+            <div id="userDetailsBody" style="margin-top: 15px; display: flex; flex-direction: column; gap: 6px;"></div>
             <div class="modal-actions" style="margin-top: 20px;">
-                <button id="closeUserDetailsBtn" class="btn-secondary">Close</button>
+                <button type="button" id="closeUserDetailsBtn" class="btn-secondary">Close</button>
             </div>
         </div>
     </div>
@@ -214,8 +232,8 @@
             <h3 id="modalTitle">Confirm Action</h3>
             <p id="modalDescription">Are you sure you want to perform this administrative action?</p>
             <div class="modal-actions">
-                <button id="modalCancelBtn" class="btn-secondary">Cancel</button>
-                <button id="modalConfirmBtn" class="btn-danger">Confirm</button>
+                <button type="button" id="modalCancelBtn" class="btn-secondary">Cancel</button>
+                <button type="button" id="modalConfirmBtn" class="btn-danger">Confirm</button>
             </div>
         </div>
     </div>
@@ -227,13 +245,13 @@
             <form id="addCategoryForm" style="margin-top: 15px;">
                 <div class="form-group">
                     <label for="catName">Category Name</label>
-                    <input type="text" id="catName" required style="width: 100%; padding: 8px; margin-top: 4px;" />
+                    <input type="text" id="catName" required />
                 </div>
-                <div class="form-group" style="margin-top: 10px;">
+                <div class="form-group" style="margin-top: 12px;">
                     <label for="catDesc">Description</label>
-                    <textarea id="catDesc" rows="3" style="width: 100%; padding: 8px; margin-top: 4px;"></textarea>
+                    <textarea id="catDesc" rows="3"></textarea>
                 </div>
-                <div class="modal-actions" style="margin-top: 15px;">
+                <div class="modal-actions" style="margin-top: 18px;">
                     <button type="button" id="cancelCatBtn" class="btn-secondary">Cancel</button>
                     <button type="submit" class="btn-primary">Save Category</button>
                 </div>
@@ -241,13 +259,8 @@
         </div>
     </div>
 
-    <!-- Global UI, Auth Modules, Admin Modules, and Admin Controller -->
+    <!-- Global UI, Admin Modules, and Admin Controller -->
     <script src="/js/ui.js"></script>
-    <script src="/js/auth_modules/auth_engine.js"></script>
-    <script src="/js/auth_modules/auth_forms.js"></script>
-    <script src="/js/auth_modules/auth_forgot.js"></script>
-    <script src="/js/auth_modules/auth_logout.js"></script>
-    <script src="/js/auth.js"></script>
     <script src="/js/admin_modules/admin_helpers.js"></script>
     <script src="/js/admin_modules/admin_users.js"></script>
     <script src="/js/admin_modules/admin_categories.js"></script>
@@ -282,8 +295,6 @@
         function generateReport(type) {
             if (typeof window.exportReport === 'function') {
                 window.exportReport(type);
-            } else {
-                console.log(`Generating report for: ${type}`);
             }
         }
     </script>
