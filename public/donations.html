@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/modals.css">
     <link rel="stylesheet" href="/css/donations.css">
 </head>
 <body>
@@ -55,7 +56,7 @@
     <main class="main-content">
         <header class="page-header">
             <h1 class="page-title">Food Surplus Management</h1>
-            <p class="page-subtitle">List new surplus food or review items available across the platform.</p>
+            <p class="page-subtitle">List new surplus food or search and claim items available across the platform.</p>
         </header>
 
         <section class="content-card section-mb" id="postSurplusSection">
@@ -79,7 +80,7 @@
                 <div class="form-row">
                     <div class="flex-1">
                         <label for="page_quantity" class="form-label">Quantity</label>
-                        <input type="number" id="page_quantity" class="form-input" min="1" required placeholder="5">
+                        <input type="number" id="page_quantity" class="form-input" min="1" step="any" required placeholder="5">
                     </div>
                     <div class="flex-1">
                         <label for="page_unit" class="form-label">Unit</label>
@@ -108,6 +109,34 @@
             <div class="card-header">
                 <h3 id="donationsListHeading"><i class="fa-solid fa-list-check"></i> Food Surplus Listings</h3>
             </div>
+
+            <!-- Search & Filter Bar (Food Type, Location, Minimum Quantity, Expiry Date) -->
+            <div class="donations-filter-bar" id="donationsFilterBar">
+                <div class="filter-field filter-search">
+                    <label for="filterSearchInput" class="form-label">Search Food or Location</label>
+                    <input type="text" id="filterSearchInput" class="form-input" placeholder="Search food name or pickup location...">
+                </div>
+                <div class="filter-field">
+                    <label for="filterCategorySelect" class="form-label">Category</label>
+                    <select id="filterCategorySelect" class="form-input">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="filterMinQtyInput" class="form-label">Min Quantity</label>
+                    <input type="number" id="filterMinQtyInput" class="form-input" min="0" step="any" placeholder="e.g. 5">
+                </div>
+                <div class="filter-field">
+                    <label for="filterExpiryBeforeInput" class="form-label">Valid Until (Before)</label>
+                    <input type="date" id="filterExpiryBeforeInput" class="form-input">
+                </div>
+                <div class="filter-field filter-reset-wrap">
+                    <button type="button" id="resetDonationFiltersBtn" class="btn-secondary">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+            </div>
+
             <div id="userDonationsContainer">
                 <div class="loading-state">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading surplus items...
@@ -115,6 +144,53 @@
             </div>
         </section>
     </main>
+</div>
+
+<!-- Edit Food Donation Modal (For Donors / Admins) -->
+<div id="editDonationModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 540px;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> Edit Food Listing</h3>
+            <button type="button" id="closeEditDonationModalBtn" class="btn-secondary" style="padding: 4px 10px;">&times;</button>
+        </div>
+        <form id="editDonationForm" class="donations-form">
+            <input type="hidden" id="edit_donation_id">
+            <div class="form-row">
+                <div class="flex-2">
+                    <label for="edit_food_name" class="form-label">Food Item Name</label>
+                    <input type="text" id="edit_food_name" class="form-input" required>
+                </div>
+                <div class="flex-1">
+                    <label for="edit_category_id" class="form-label">Category</label>
+                    <select id="edit_category_id" class="form-input" required></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="flex-1">
+                    <label for="edit_quantity" class="form-label">Quantity</label>
+                    <input type="number" id="edit_quantity" class="form-input" min="1" step="any" required>
+                </div>
+                <div class="flex-1">
+                    <label for="edit_unit" class="form-label">Unit</label>
+                    <input type="text" id="edit_unit" class="form-input" required>
+                </div>
+                <div class="flex-1">
+                    <label for="edit_expiry_date" class="form-label">Expiry Date</label>
+                    <input type="datetime-local" id="edit_expiry_date" class="form-input" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edit_pickup_location" class="form-label">Pickup Location</label>
+                <input type="text" id="edit_pickup_location" class="form-input" required>
+            </div>
+            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+                <button type="button" id="cancelEditDonationBtn" class="btn-secondary">Cancel</button>
+                <button type="submit" id="saveEditDonationBtn" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script src="/js/ui.js"></script>

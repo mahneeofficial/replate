@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -78,6 +78,11 @@ try {
             exit;
         }
         require __DIR__ . '/donation_handlers/get_available_listings.php';
+        exit;
+    }
+
+    if ($method === 'PUT' || ($method === 'POST' && $action === 'update')) {
+        require __DIR__ . '/donation_handlers/edit_donation.php';
         exit;
     }
 
