@@ -40,19 +40,53 @@ try {
     ");
     $stmtReset->execute([$user['user_id'], $rawEmail, $hashedCode, $expiresAt]);
 
+    // Build dynamic base URL for the 1-Click Copy Code & Reset action
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+    $basePath = preg_replace('#/api(?:/.*)?$#', '', str_replace('\\', '/', $scriptDir));
+    $loginPath = ($basePath === '' || $basePath === '/') ? '/login' : rtrim($basePath, '/') . '/login.html';
+    $copyAndResetUrl = "{$scheme}://{$host}{$loginPath}?reset_email=" . rawurlencode($rawEmail) . "&reset_code=" . rawurlencode($code);
+
     $mailConfig = __DIR__ . '/../../../config/mail.php';
     if (file_exists($mailConfig)) {
         require_once $mailConfig;
         if (function_exists('sendEmail')) {
             $safeName = htmlspecialchars((string)$user['display_name'], ENT_QUOTES, 'UTF-8');
+            $safeActionUrl = htmlspecialchars($copyAndResetUrl, ENT_QUOTES, 'UTF-8');
+            $requestIp = htmlspecialchars((string)($_SERVER['REMOTE_ADDR'] ?? 'Unknown IP'), ENT_QUOTES, 'UTF-8');
+            $requestTime = date('M j, Y \a\t H:i');
+
             $htmlBody = "
                 <p>Hello <strong>{$safeName}</strong>,</p>
-                <p>You requested a password reset for your RePlate account. Use the One-Time Password (OTP) below to complete your verification:</p>
-                <div class=\"code-box\">{$code}</div>
-                <p>This verification code expires in <strong>15 minutes</strong>.</p>
-                <p style=\"font-size: 13px; color: #64748b;\">If you did not request this password reset, please ignore this email or update your password to protect your account.</p>
+                <p>You requested a password reset for your <strong>RePlate</strong> account. Tap the code below to select it, or click <strong>Copy Code &amp; Reset</strong> to apply it automatically:</p>
+
+                <div class=\"code-box\" style=\"user-select: all; -webkit-user-select: all; -moz-user-select: all; cursor: pointer; letter-spacing: 6px;\">{$code}</div>
+
+                <div style=\"margin: 22px 0; text-align: center;\">
+                    <a href=\"{$safeActionUrl}\" style=\"display: inline-block; background-color: #10b981; color: #052e16; font-weight: 700; text-decoration: none; padding: 13px 26px; border-radius: 10px; font-size: 15px;\">
+                        &#128203; Copy Code &amp; Reset Password
+                    </a>
+                </div>
+
+                <table style=\"width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; color: #94a3b8;\">
+                    <tr>
+                        <td style=\"padding: 6px 0;\"><strong>Expires In:</strong></td>
+                        <td style=\"padding: 6px 0; text-align: right;\">15 minutes</td>
+                    </tr>
+                    <tr>
+                        <td style=\"padding: 6px 0;\"><strong>Requested At:</strong></td>
+                        <td style=\"padding: 6px 0; text-align: right;\">{$requestTime}</td>
+                    </tr>
+                    <tr>
+                        <td style=\"padding: 6px 0;\"><strong>Request IP:</strong></td>
+                        <td style=\"padding: 6px 0; text-align: right;\">{$requestIp}</td>
+                    </tr>
+                </table>
+
+                <p style=\"font-size: 13px; color: #64748b;\">If you did not request this password reset, please ignore this email.</p>
             ";
-            @sendEmail($rawEmail, "RePlate — Password Reset Code", $htmlBody);
+            @sendEmail($rawEmail, "RePlate — Password Reset Code ({$code})", $htmlBody);
         }
     }
 
